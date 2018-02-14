@@ -102,6 +102,10 @@ void AGeodroidCharacter::BeginPlay()
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
+	///FPS TEMPLATE MODIFIED FROM HERE ON BELOW FOR THIS FUNCTION
+
+	///Creating the Game map grid
+	CreateMapGrid();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -297,3 +301,80 @@ bool AGeodroidCharacter::EnableTouchscreenMovement(class UInputComponent* Player
 	
 	return false;
 }
+
+///FPS TEMPLATE CODE MODIFIED FROM HERE ON BELOW
+
+void AGeodroidCharacter::CreateMapGrid()
+{
+	///Creating a TArray of FMapNodes
+	for (int32 x = 0; x < MapMaxSize.X; x++)
+	{
+		for (int32 y = 0; y < MapMaxSize.Y; y++)
+		{
+			FMapNode Temp;
+			Temp.StructInit(FVector(x * 400.f, y * 400.f, 64), true); //Generates a node on every floor panel (Since all floor panels are 400x400)
+			Map.Add(Temp);
+		}
+	}
+
+	///Setting the Walkables as per the game designer
+	SetMapWalkables();
+
+	DisplayMapForDebug();
+}
+
+void AGeodroidCharacter::DisplayMapForDebug()
+{
+	for (int32 x = 0; x < MapMaxSize.X; x++)
+	{
+		for (int32 y = 0; y < MapMaxSize.Y; y++)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("(%d,%d): %s & %s"), x, y, *Map[(x * MapMaxSize.Y) + y].Position.ToString(), *FString(Map[(x * MapMaxSize.Y) + y].bWalkable ? "Walkable" : "Not Walkable"));
+		}
+	}
+}
+
+void AGeodroidCharacter::SetMapWalkables()
+{
+	///Iterate through the MapWalkableArray
+	for (int32 Counter = 0; Counter < MapWalkableArray.Num(); Counter++)
+	{
+		///If X index is valid
+		if (MapWalkableArray[Counter].X < MapMaxSize.X)
+		{
+			///If the Y index is negative & Valid
+			if (MapWalkableArray[Counter].Y < 0 && (MapWalkableArray[Counter].Y * -1) < MapMaxSize.Y)
+			{
+				///Then Iterates through the rest of the Map index in Y and fill bWalkable with false
+				for (int32 Y = (MapWalkableArray[Counter].Y * -1); Y < MapMaxSize.Y; Y++)
+				{
+					int32 MapIndexIn1D;
+					MapIndexIn1D = (MapWalkableArray[Counter].X * MapMaxSize.Y) + Y;
+					Map[MapIndexIn1D].bWalkable = false;
+				}
+
+			}
+			///If Y index is Positive & Valid
+			else if (MapWalkableArray[Counter].Y >= 0 && (MapWalkableArray[Counter].Y * -1) < MapMaxSize.Y)
+			{
+				///Set the bWalkable to false
+				int32 MapIndexIn1D;
+				MapIndexIn1D = (MapWalkableArray[Counter].X * MapMaxSize.Y) + MapWalkableArray[Counter].Y;
+				Map[MapIndexIn1D].bWalkable = false;
+			}
+			///Else Y index is invalid
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("(%s) Index for Map is not Correct @ MapWalkableArray Index %d"), *MapWalkableArray[Counter].ToString(), Counter);
+			}
+		}
+		///Else X index is invalid
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("(%s) Index for Map is not Correct @ MapWalkableArray Index %d"), *MapWalkableArray[Counter].ToString(), Counter);
+		}
+	}
+
+}
+
+

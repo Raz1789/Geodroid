@@ -12,6 +12,7 @@ class AGeodroidGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+
 	AGeodroidGameMode();
 };
 

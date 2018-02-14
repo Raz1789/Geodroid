@@ -3,18 +3,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "MapNode.generated.h"
 
 /**
  * 
  */
-UCLASS()
-class GEODROID_API UMapNode : public UObject
+USTRUCT(BlueprintType)
+struct FMapNode
 {
 	GENERATED_BODY()
-	
-	
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
+	FVector Position;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
+	bool bWalkable;
+
+	void StructInit(FVector _Position, bool _bWalkable);
 	
 };
