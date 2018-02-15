@@ -14,11 +14,14 @@ struct FMapNode
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
+		FVector2D NodeIndex;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
 	FVector Position;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
 	bool bWalkable;
 
-	void StructInit(FVector _Position, bool _bWalkable);
+	void StructInit(FVector2D _NodeIndex, FVector _Position, bool _bWalkable);
 	
 };

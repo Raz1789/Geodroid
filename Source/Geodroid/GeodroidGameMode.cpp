@@ -5,6 +5,17 @@
 #include "GeodroidCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
+/// STATIC MEMBER VARIABLES
+FVector2D AGeodroidGameMode::MapMaxSize = FVector2D(9, 7);
+
+TArray<bool> AGeodroidGameMode::MapWalkableArray;
+
+TArray<FMapNode> AGeodroidGameMode::Map;
+
+bool AGeodroidGameMode::bMapNodeStatusChanged;
+
+
+/// MEMBER FUNCTIONS
 AGeodroidGameMode::AGeodroidGameMode()
 	: Super()
 {
@@ -14,4 +25,152 @@ AGeodroidGameMode::AGeodroidGameMode()
 
 	// use our custom HUD class
 	HUDClass = AGeodroidHUD::StaticClass();
+
+	///FPS TEMPLATE MODIFIED FROM HERE ON BELOW FOR THIS FUNCTION
+	PrimaryActorTick.bCanEverTick = true;
+
+	///Default Initializing for MapWalkableArray
+	MapDesignWalkableArray.Add(FVector2D(0, -1));
+	MapDesignWalkableArray.Add(FVector2D(1, -4));
+	MapDesignWalkableArray.Add(FVector2D(2, -4));
+	MapDesignWalkableArray.Add(FVector2D(2, 2));
+	MapDesignWalkableArray.Add(FVector2D(3, -4));
+	MapDesignWalkableArray.Add(FVector2D(3, 2));
+	MapDesignWalkableArray.Add(FVector2D(4, 4));
+	MapDesignWalkableArray.Add(FVector2D(4, 6));
+	MapDesignWalkableArray.Add(FVector2D(5, 2));
+	MapDesignWalkableArray.Add(FVector2D(5, 4));
+	MapDesignWalkableArray.Add(FVector2D(6, 2));
+	MapDesignWalkableArray.Add(FVector2D(6, 4));
+
+	///Creating the Game map grid
+	CreateMapGrid();
+}
+
+///FPS TEMPLATE CODE MODIFIED FROM HERE ON BELOW
+
+int32 AGeodroidGameMode::IndexFrom1DTo2D(int32 X, int32 Y, FVector2D ArraySize)
+{
+	return ((X * ArraySize.Y) + Y);
+}
+
+void AGeodroidGameMode::CreateMapGrid()
+{
+	bMapNodeStatusChanged = true;
+	///Creating a TArray of FMapNodes
+	for (int32 x = 0; x < MapMaxSize.X; x++)
+	{
+		for (int32 y = 0; y < MapMaxSize.Y; y++)
+		{
+			FMapNode Temp;
+			Temp.StructInit(FVector2D((float)x, (float)y), FVector(x * 400.f, y * 400.f, 64), true); //Generates a node on every floor panel (Since all floor panels are 400x400)
+			Map.Add(Temp);
+		}
+	}
+
+	///Setting the Walkables as per the game designer
+	SetMapWalkables();
+
+	if (IsDebugOn())
+	{
+		DisplayMapForDebug();
+	}
+}
+
+void AGeodroidGameMode::DisplayMapForDebug()
+{
+	for (int32 x = 0; x < MapMaxSize.X; x++)
+	{
+		for (int32 y = 0; y < MapMaxSize.Y; y++)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("(%d,%d): %s & %s"), x, y, *Map[IndexFrom1DTo2D(x, y, MapMaxSize)].Position.ToString(), *FString(Map[IndexFrom1DTo2D(x, y, MapMaxSize)].bWalkable ? "Walkable" : "Not Walkable"));
+		}
+	}
+}
+
+void AGeodroidGameMode::SetMapWalkables()
+{
+
+	///Iterate through the MapWalkableArray
+	for (int32 Counter = 0; Counter < MapDesignWalkableArray.Num(); Counter++)
+	{
+		///If X index is valid
+		if (MapDesignWalkableArray[Counter].X < MapMaxSize.X)
+		{
+			///If the Y index is negative & Valid
+			if (MapDesignWalkableArray[Counter].Y < 0 && (MapDesignWalkableArray[Counter].Y * -1) < MapMaxSize.Y)
+			{
+				///Then Iterates through the rest of the Map index in Y and fill bWalkable with false
+				for (int32 Y = (MapDesignWalkableArray[Counter].Y * -1); Y < MapMaxSize.Y; Y++)
+				{
+					///Set the bWalkable to false
+					Map[IndexFrom1DTo2D(MapDesignWalkableArray[Counter].X, Y, MapMaxSize)].bWalkable = false;
+				}
+
+			}
+			///If Y index is Positive & Valid
+			else if (MapDesignWalkableArray[Counter].Y >= 0 && (MapDesignWalkableArray[Counter].Y * -1) < MapMaxSize.Y)
+			{
+				///Set the bWalkable to false
+				Map[IndexFrom1DTo2D(MapDesignWalkableArray[Counter].X, MapDesignWalkableArray[Counter].Y, MapMaxSize)].bWalkable = false;
+
+			}
+			///Else Y index is invalid
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("(%s) Index for Map is not Correct @ MapWalkableArray Index %d"), *MapDesignWalkableArray[Counter].ToString(), Counter);
+			}
+		}
+		///Else X index is invalid
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("(%s) Index for Map is not Correct @ MapWalkableArray Index %d"), *MapDesignWalkableArray[Counter].ToString(), Counter);
+		}
+	}
+
+}
+
+FVector AGeodroidGameMode::GetMapNodePosition(int32 X, int32 Y)
+{
+	return Map[IndexFrom1DTo2D(X, Y, MapMaxSize)].Position;
+}
+
+bool AGeodroidGameMode::IsMapNodeWalkable(int32 X, int32 Y)
+{
+	return Map[IndexFrom1DTo2D(X, Y, MapMaxSize)].bWalkable;
+}
+
+void AGeodroidGameMode::SetMapNodeWalkable(int32 X, int32 Y, bool _bWalkable)
+{
+	bMapNodeStatusChanged = true;
+	Map[IndexFrom1DTo2D(X, Y, MapMaxSize)].bWalkable = _bWalkable;
+}
+
+bool AGeodroidGameMode::IsDebugOn()
+{
+		return DEBUG;
+}
+
+bool AGeodroidGameMode::IsMapNodeStatusChanged()
+{
+	return bMapNodeStatusChanged;
+}
+
+TArray<bool> AGeodroidGameMode::GetMapWalkableArray()
+{
+	return MapWalkableArray;
+}
+
+FVector2D AGeodroidGameMode::GetMapMaxSize()
+{
+	return MapMaxSize;
+}
+
+void AGeodroidGameMode::MapWalkableExtractor()
+{
+	MapWalkableArray.Empty();
+	for (int32 Counter = 0; Counter < Map.Num(); Counter++)
+	{
+		MapWalkableArray.Add(Map[Counter].bWalkable);
+	}
 }

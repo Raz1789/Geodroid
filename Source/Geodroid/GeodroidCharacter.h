@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MapNode.h"
+#include "A_Pathfinding.h"
 #include "GameFramework/Character.h"
 #include "GeodroidCharacter.generated.h"
 
@@ -138,42 +139,5 @@ public:
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-	///FPS TEMPLATE CODE MODIFIED FROM HERE ON BELOW
-public:
-
-	///MEMBER VARIABLES
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Defines the max size of the Map
-		FIntPoint MapMaxSize;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Array to Set MapNode Walkables. [MUST BE IN ASCENDING ORDER]
-		//NOTE: negative number implies all Node indices after and at that number shall set to false
-		//Eg. (2,-1) => all Nodes from (2,1) to (2,6) shall be set to false
-		TArray<FIntPoint> MapWalkableArray;
-
-private:
-	///MEMBER VARIABLES
-
-	UPROPERTY(VisibleAnywhere, Category = "Game Design")
-		//Map containing all the nodes in the game world
-		TArray<FMapNode> Map;
-
-	///MEMBER FUNCTIONS
-
-	UFUNCTION()
-		//Function to create the MAP grids for the world
-		void CreateMapGrid();
-
-	UFUNCTION()
-		//Display the Map in Output log for Debug
-		void DisplayMapForDebug();
-
-	UFUNCTION()
-		//Function to set the bWalkable of the node from Game Designer provided TArray
-		void SetMapWalkables();
-
 };
 

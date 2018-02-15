@@ -2,8 +2,9 @@
 
 #include "MapNode.h"
 
-void FMapNode::StructInit(FVector _Position, bool _bWalkable)
+void FMapNode::StructInit(FVector2D _NodeIndex, FVector _Position, bool _bWalkable)
 {
+	NodeIndex = _NodeIndex;
 	Position = _Position;
 	bWalkable = _bWalkable;
 }
