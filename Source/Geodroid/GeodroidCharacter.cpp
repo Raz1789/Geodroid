@@ -102,7 +102,27 @@ void AGeodroidCharacter::BeginPlay()
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
-	
+
+	if (AGeodroidGameMode::IsDebugOn())
+	{
+		//DebugFunction();
+		TArray<FVector2D> PathList;
+		UA_Pathfinding* A_Pathfinding;
+		A_Pathfinding = NewObject<UA_Pathfinding>();
+		PathList = A_Pathfinding->CalculatePath(FVector2D(0, 0), FVector2D(4,5));
+
+		if (PathList.Num() > 0)
+		{
+			for (int32 Counter = 0; Counter < PathList.Num(); Counter++)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("PathNode %d: %s"), Counter, *PathList[Counter].ToString());
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PathList is Empty"));
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -301,4 +321,40 @@ bool AGeodroidCharacter::EnableTouchscreenMovement(class UInputComponent* Player
 	}
 	
 	return false;
+}
+
+void AGeodroidCharacter::DebugFunction()
+{
+	if (NodeViewerClass != NULL)
+	{
+		UWorld* const World = GetWorld();
+		if(World != NULL)
+		{
+			//Get the Map's Max Size
+			FVector2D MapMaxSize = AGeodroidGameMode::GetMapMaxSize();
+			//Iterate through each Node
+			for (int32 X = 0; X < MapMaxSize.X; X++)
+			{
+				for (int32 Y = 0; Y < MapMaxSize.Y; Y++)
+				{
+					//Ask Gamemode for the position of the Node
+					FVector position = AGeodroidGameMode::GetMapNodePosition(X, Y);
+					position.Z = 100.f;
+
+					//Spawn the actor at that location
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+					ANodeViewerActor* NodeViewer = World->SpawnActor<ANodeViewerActor>(NodeViewerClass, position, FRotator(0.f), SpawnParams);
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("GetWorld not initialized"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("NodeViewer Class not initialized"));
+	}
 }

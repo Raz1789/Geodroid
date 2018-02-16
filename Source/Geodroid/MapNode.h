@@ -5,10 +5,8 @@
 #include "CoreMinimal.h"
 #include "MapNode.generated.h"
 
-/**
- * 
- */
 USTRUCT(BlueprintType)
+//Struct containing the Map Nodes
 struct FMapNode
 {
 	GENERATED_BODY()
@@ -17,10 +15,10 @@ struct FMapNode
 		FVector2D NodeIndex;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
-	FVector Position;
+		FVector Position;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
-	bool bWalkable;
+		bool bWalkable;
 
 	void StructInit(FVector2D _NodeIndex, FVector _Position, bool _bWalkable);
 	

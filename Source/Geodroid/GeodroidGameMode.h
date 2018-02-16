@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "MapNode.h"
+#include "algorithm"
 #include "GeodroidGameMode.generated.h"
 
 #define DEBUG true
@@ -35,6 +36,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Helper Functions")
 		static int32 IndexFrom1DTo2D(int32 X, int32 Y, FVector2D ArraySize);
 
+	UFUNCTION(BlueprintCallable, Category = "Helper Functions")
+		static FMapNode WorldToMapNode(FVector WorldPosition);
+
 	///GETTERS & SETTERS
 	
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
@@ -57,6 +61,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
 		static FVector2D GetMapMaxSize();
+
+
 
 private:
 	///MEMBER VARIABLES ****************************************************************

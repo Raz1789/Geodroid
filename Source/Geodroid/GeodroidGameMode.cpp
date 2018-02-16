@@ -27,7 +27,7 @@ AGeodroidGameMode::AGeodroidGameMode()
 	HUDClass = AGeodroidHUD::StaticClass();
 
 	///FPS TEMPLATE MODIFIED FROM HERE ON BELOW FOR THIS FUNCTION
-	PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.bCanEverTick = true;
 
 	///Default Initializing for MapWalkableArray
 	MapDesignWalkableArray.Add(FVector2D(0, -1));
@@ -52,6 +52,13 @@ AGeodroidGameMode::AGeodroidGameMode()
 int32 AGeodroidGameMode::IndexFrom1DTo2D(int32 X, int32 Y, FVector2D ArraySize)
 {
 	return ((X * ArraySize.Y) + Y);
+}
+
+FMapNode AGeodroidGameMode::WorldToMapNode(FVector WorldPosition)
+{
+	int32 X = std::max(MapMaxSize.X, WorldPosition.X);
+	int32 Y = std::max(MapMaxSize.Y, WorldPosition.Y);
+	return Map[IndexFrom1DTo2D(X,Y,MapMaxSize)];
 }
 
 void AGeodroidGameMode::CreateMapGrid()

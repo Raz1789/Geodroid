@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "MapNode.h"
 #include "A_Pathfinding.h"
+#include "Engine/World.h"
+#include "NodeViewerActor.h"
 #include "GameFramework/Character.h"
 #include "GeodroidCharacter.generated.h"
 
@@ -139,5 +141,11 @@ public:
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	//TODO: Remove after testing
+	void DebugFunction();
+
+	UPROPERTY(EditDefaultsOnly, Category = "debug")
+	TSubclassOf<ANodeViewerActor> NodeViewerClass;
 };
 
