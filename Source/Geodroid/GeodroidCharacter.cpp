@@ -102,27 +102,6 @@ void AGeodroidCharacter::BeginPlay()
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
-
-	if (AGeodroidGameMode::IsDebugOn())
-	{
-		//DebugFunction();
-		TArray<FVector2D> PathList;
-		UA_Pathfinding* A_Pathfinding;
-		A_Pathfinding = NewObject<UA_Pathfinding>();
-		PathList = A_Pathfinding->CalculatePath(FVector2D(0, 0), FVector2D(4,5));
-
-		if (PathList.Num() > 0)
-		{
-			for (int32 Counter = 0; Counter < PathList.Num(); Counter++)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("PathNode %d: %s"), Counter, *PathList[Counter].ToString());
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("PathList is Empty"));
-		}
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////

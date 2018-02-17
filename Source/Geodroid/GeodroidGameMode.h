@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "MapNode.h"
+#include "BaseEnemyClass.h"
 #include "algorithm"
 #include "GeodroidGameMode.generated.h"
 
@@ -20,15 +21,40 @@ public:
 	AGeodroidGameMode();
 
 	///FPS TEMPLATE CODE MODIFIED FROM HERE ON BELOW
+protected:
+
+	virtual void BeginPlay() override;
+	
 public:
+
+	virtual void Tick(float DeltaTime) override;
 
 	///MEMBER VARIABLES ********************************************************************************
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 		//Array to Set MapNode Walkables.
 		//NOTE: negative number implies all Node indices after and at that number shall set to false
 		//Eg. (2,-1) => all Nodes from (2,1) to (2,6) shall be set to false
 		TArray<FVector2D> MapDesignWalkableArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Set the maximum pawns that can be spawned
+		int32 MaxSpawnablePawns;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Set the maximum time between spawning
+		float TimeBetweenSpawn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Start Node or the Pawn Spawn Location
+		FVector2D StartNode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Target Node
+		FVector2D TargetNode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		TArray<TSubclassOf<ABaseEnemyClass>> EnemyClassList;
 
 	///MEMBER FUNCTION **********************************************************************************
 
@@ -61,9 +87,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
 		static FVector2D GetMapMaxSize();
-
-
-
+	
 private:
 	///MEMBER VARIABLES ****************************************************************
 
@@ -79,6 +103,18 @@ private:
 		//Defines the max size of the Map
 		static FVector2D MapMaxSize;
 
+		//stores the number of pawns spawned
+		int32 PawnCounter;
+
+		//Variable holding the time from last spawn
+		float TimeFromLastSpawn;
+
+		//The Game World Variable
+		UWorld* World;
+
+		//Array containing all the pawns
+		TArray<ABaseEnemyClass*> EnemyList;
+
 	///MEMBER FUNCTIONS *****************************************************************
 
 	UFUNCTION()
@@ -87,7 +123,7 @@ private:
 
 	UFUNCTION()
 		//Display the Map in Output log for Debug
-		void DisplayMapForDebug();
+		static void DisplayMapForDebug();
 
 	UFUNCTION()
 		//Function to set the bWalkable of the node from Game Designer provided TArray
@@ -95,7 +131,12 @@ private:
 
 	UFUNCTION()
 		//Function to extract the bWalkable from the Map
-		void MapWalkableExtractor();
+		static void MapWalkableExtractor();
+
+	UFUNCTION()
+		//Spawn an Enemy
+		void SpawnEnemy(int32 PawnClassIndex);
+
 };
 
 

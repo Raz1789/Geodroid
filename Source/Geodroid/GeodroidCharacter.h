@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MapNode.h"
-#include "A_Pathfinding.h"
+#include "GeodroidGameMode.h"
 #include "Engine/World.h"
 #include "NodeViewerActor.h"
 #include "GameFramework/Character.h"
