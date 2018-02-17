@@ -2,11 +2,13 @@
 
 #include "A_Pathfinding.h"
 
+#define OUT
+
 #pragma region STRUCT FUNCTION DEFINITIONS
 
 UA_Pathfinding::PathNode::PathNode(FVector2D _CurrentPathNode, PathNode* _PreviousPathNode, FVector2D _StartPathNode, FVector2D _TargetPathNode)
 {
-	CurrentPathNode = _CurrentPathNode;
+	CurrentMapNode = _CurrentPathNode;
 	PreviousPathNode = _PreviousPathNode;
 	CalculateCost(_StartPathNode, _TargetPathNode);
 }
@@ -29,20 +31,27 @@ bool UA_Pathfinding::PathNode::operator< (const PathNode& other) const
 
 bool UA_Pathfinding::PathNode::operator== (const PathNode& other) const
 {
-	if (CurrentPathNode.X == other.CurrentPathNode.X && CurrentPathNode.Y == other.CurrentPathNode.Y)
+	if (this != &other) {
+		if (CurrentMapNode.X == other.CurrentMapNode.X && CurrentMapNode.Y == other.CurrentMapNode.Y)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else 
 	{
 		return true;
 	}
-	else
-	{
-		return false;
-	}
+	
 }
 
 void UA_Pathfinding::PathNode::CalculateCost(FVector2D StartPathNode, FVector2D TargetPathNode)
 {
-	GCost = FVector2D::DistSquared(StartPathNode, CurrentPathNode);
-	HCost = FVector2D::DistSquared(TargetPathNode, CurrentPathNode);
+	GCost = FVector2D::DistSquared(StartPathNode, CurrentMapNode);
+	HCost = FVector2D::DistSquared(TargetPathNode, CurrentMapNode);
 	FCost = GCost + HCost;
 }
 
@@ -59,8 +68,6 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 	FVector2D TargetIndex)
 {
 	///Initializing NeighbourList only first time
-	UE_LOG(LogTemp, Warning, TEXT("Entered 0: NeihbourList %d"), NeighbourList.Num());
-
 	if (NeighbourList.Num() == 0)
 	{
 		NeighbourList.Add(FVector2D(-1, 0));
@@ -73,11 +80,12 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 	if (AGeodroidGameMode::IsMapNodeStatusChanged() || MapWalkableArray.Num() == 0)
 	{
 		///Make a copy of the MapWalkableArray in this class and get the MapSize
-		MapWalkableArray = AGeodroidGameMode::GetMapWalkableArray();
+		MapWalkableArray.Append(AGeodroidGameMode::GetMapWalkableArray());
 		MapMaxSize = AGeodroidGameMode::GetMapMaxSize();
 	}
 
 	///Clearing the temporary variables
+	OpenedList.Sort();
 	OutputList.Empty();
 	OpenedList.Empty();
 	ClosedList.Empty();
@@ -86,68 +94,66 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 	PathNode* TempPathNode = new PathNode(StartIndex, nullptr, StartIndex, TargetIndex);
 
 	///Temporary FVector2D for Speed Optimization
-	FVector2D TempVector;
+	FVector2D CheckingNodeVector;
 
 	///Assign it to OpenedList
 	OpenedList.Add(TempPathNode);
 	int32 LoopCounter = 0;
 
+
 	///Loop Till OpenedList is not Empty
-	while (OpenedList.Num() > 0 && LoopCounter < 10)
+	while (OpenedList.Num() > 0 && LoopCounter < 50)
 	{
 		///Sort OpenedList, assign smallest to ClosedList and remove from OpenList
 		OpenedList.Sort();
 		ClosedList.Add(OpenedList[0]);
 		OpenedList.RemoveAt(0);
 
-		UE_LOG(LogTemp, Error, TEXT("--------------------------------------------"));
-
-		for (int32 ClosedCounter = 0; ClosedCounter < ClosedList.Num(); ClosedCounter++)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("ClosedCounter %d: %s"), ClosedCounter, *ClosedList[ClosedCounter]->CurrentPathNode.ToString());
-		}
-
-		UE_LOG(LogTemp, Error, TEXT("--------------------------------------------"));
-
-		for (int32 OpenedCounter = 0; OpenedCounter < OpenedList.Num(); OpenedCounter++)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("OpenedCounter %d: %s"), OpenedCounter, *OpenedList[OpenedCounter]->CurrentPathNode.ToString());
-		}
-
 		///Getting X and Y of the node that needs to be checked
-		int32 X = ClosedList[ClosedList.Num() - 1]->CurrentPathNode.X;
-		int32 Y = ClosedList[ClosedList.Num() - 1]->CurrentPathNode.Y;
+		int32 X = ClosedList[ClosedList.Num() - 1]->CurrentMapNode.X;
+		int32 Y = ClosedList[ClosedList.Num() - 1]->CurrentMapNode.Y;
 
 		///Searching the Valid Neighbours for Least FCost
 		for (int32 Counter = 0; Counter < NeighbourList.Num(); Counter++)
 		{
-			TempVector.X = X + NeighbourList[Counter].X;
-			TempVector.Y = Y + NeighbourList[Counter].Y;
+			CheckingNodeVector.X = X + NeighbourList[Counter].X;
+			CheckingNodeVector.Y = Y + NeighbourList[Counter].Y;
 
 			///Checking boundary conditions
-			if (CheckBoundary(TempVector))
+			if (CheckBoundary(CheckingNodeVector))
 			{
-
-				if (!TempPathNode) delete TempPathNode;
-
-				TempPathNode = new PathNode(TempVector,
+				TempPathNode = new PathNode(CheckingNodeVector,
 					ClosedList[ClosedList.Num() - 1],
 					StartIndex,
 					TargetIndex);
 
 				///Check 1: if the TempPathNode is the TargetIndex
-				if (TempPathNode->CurrentPathNode.X != TargetIndex.X 
-					&& TempPathNode->CurrentPathNode.Y != TargetIndex.Y
-					&& AGeodroidGameMode::IsMapNodeWalkable(X,Y))
+				if ((TempPathNode->CurrentMapNode.X != TargetIndex.X 
+					|| TempPathNode->CurrentMapNode.Y != TargetIndex.Y)
+					&& AGeodroidGameMode::IsMapNodeWalkable(CheckingNodeVector.X,CheckingNodeVector.Y))
 				{
 					///Check 2: if the TempPathNode is not available in the ClosedList
-					if (!ClosedList.Contains(TempPathNode))
+					if (!ClosedList.ContainsByPredicate(
+						///LAMBDA FUNCTION to check equality
+						[TempPathNode](const PathNode* CheckNode)
+							{
+								return ((TempPathNode->CurrentMapNode.X == CheckNode->CurrentMapNode.X) && (TempPathNode->CurrentMapNode.Y == CheckNode->CurrentMapNode.Y));
+							}
+						))
 					{
 						///Find the index of TempPathNode in OpenedList
-						int32 IndexOfExistingNode = OpenedList.Find(TempPathNode);
+						int32 IndexOfExistingNode = -1;
 
-						///If the node does not exist
-						if (IndexOfExistingNode == INDEX_NONE)
+						for (int32 OpenedCounter = 0; OpenedCounter < OpenedList.Num(); OpenedCounter++)
+						{
+							if (*OpenedList[OpenedCounter] == *TempPathNode)
+							{
+								IndexOfExistingNode = OpenedCounter;
+								break;
+							}
+						}
+						///Check 3: if the TempPathNode is not available in the OpenedList
+						if(IndexOfExistingNode == -1)
 						{
 							///Add Node to OpenedList
 							OpenedList.Add(TempPathNode);
@@ -162,18 +168,19 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 					}
 					
 				}
-				else if (TempVector.X == TargetIndex.X && TempVector.Y == TargetIndex.Y)
+				///If target reached
+				else if (CheckingNodeVector.X == TargetIndex.X && CheckingNodeVector.Y == TargetIndex.Y)
 				{
+					///Make the OutputList from TempPathnode LinkedList
 					MakePathList(TempPathNode);
-					if (!TempPathNode) delete TempPathNode;
+					
+					///Return the OutputList
 					return OutputList;
 				}
 			}
 		}
 		LoopCounter++;
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Looped %d times"), LoopCounter);
 	return TArray<FVector2D>();
 }
 
@@ -191,7 +198,7 @@ void UA_Pathfinding::MakePathList(PathNode* FinalPathNode)
 	//Loop Till all the PathNodes in the PathNode LinkedList is transfered to OutputList
 	while (FinalPathNode)
 	{
-		OutputList.Add(FinalPathNode->CurrentPathNode);
+		OutputList.Add(FinalPathNode->CurrentMapNode);
 		FinalPathNode = FinalPathNode->PreviousPathNode;
 	}
 }

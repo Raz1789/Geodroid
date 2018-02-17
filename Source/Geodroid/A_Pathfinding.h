@@ -21,7 +21,7 @@ private:
 	struct PathNode
 	{
 		///MEMBER VARIABLE
-		FVector2D CurrentPathNode;
+		FVector2D CurrentMapNode;
 		PathNode* PreviousPathNode;
 		float GCost;
 		float HCost;

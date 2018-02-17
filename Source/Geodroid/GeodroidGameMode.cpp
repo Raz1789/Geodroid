@@ -78,6 +78,9 @@ void AGeodroidGameMode::CreateMapGrid()
 	///Setting the Walkables as per the game designer
 	SetMapWalkables();
 
+	///Extract the walkable array
+	MapWalkableExtractor();
+
 	if (IsDebugOn())
 	{
 		DisplayMapForDebug();
@@ -97,7 +100,6 @@ void AGeodroidGameMode::DisplayMapForDebug()
 
 void AGeodroidGameMode::SetMapWalkables()
 {
-
 	///Iterate through the MapWalkableArray
 	for (int32 Counter = 0; Counter < MapDesignWalkableArray.Num(); Counter++)
 	{
