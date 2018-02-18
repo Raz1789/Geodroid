@@ -21,7 +21,7 @@ public:
 
 	///HELPER FUNCTIONS
 	UFUNCTION(BlueprintCallable, Category = "Helper Functions")
-		static void Init(TArray<FVector2D> _MapDesignWalkableArray, float _WorldNodeSize, FVector2D _TargetNode);
+		static void Init(TArray<FVector2D> _MapDesignWalkableArray, float _WorldNodeSize, FVector2D _TargetNode, FVector2D _MapMaxSize);
 
 	UFUNCTION(BlueprintCallable, Category = "Helper Functions")
 		static int32 IndexFrom1DTo2D(int32 X, int32 Y, FVector2D ArraySize);

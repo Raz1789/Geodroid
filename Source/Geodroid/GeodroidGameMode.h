@@ -29,33 +29,37 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	///MEMBER VARIABLES
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Array to Set MapNode Walkables.
 		//NOTE: negative number implies all Node indices after and at that number shall set to false
 		//Eg. (2,-1) => all Nodes from (2,1) to (2,6) shall be set to false
 		TArray<FVector2D> MapDesignWalkableArray;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Size of a single node
 		int32 NodeWorldSize;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Set the maximum pawns that can be spawned
-		int32 MaxSpawnablePawns;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Set the maximum time between spawning
-		float TimeBetweenSpawn;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
+		//Size of Map in # of Nodes
+		FVector2D MapMaxSize;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Start Node or the Pawn Spawn Location
 		FVector2D StartNode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Target Node
 		FVector2D TargetNode;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
+		//Set the maximum pawns that can be spawned
+		int32 MaxSpawnablePawns;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
+		//Set the maximum time between spawning
+		float TimeBetweenSpawn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
 		TArray<TSubclassOf<ABaseEnemyClass>> EnemyClassList;
 
 private:

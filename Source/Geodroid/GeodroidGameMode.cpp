@@ -20,6 +20,8 @@ AGeodroidGameMode::AGeodroidGameMode()
 	PrimaryActorTick.bCanEverTick = true;
 
 	///Default Initializing for MapWalkableArray
+
+	/// LEVEL DESIGN VARIABLES
 	if (MapDesignWalkableArray.Num() == 0)
 	{
 		MapDesignWalkableArray.Add(FVector2D(0, -1));
@@ -37,16 +39,15 @@ AGeodroidGameMode::AGeodroidGameMode()
 	}
 
 	NodeWorldSize = 400.f;
-
+	MapMaxSize = FVector2D(15.f, 7.f);
+	StartNode = FVector2D(0.f, 0.f);
 	TargetNode = FVector2D(4.f, 5.f);
 
+	///ENEMY DESIGN VARIABLES
 	TimeBetweenSpawn = 1.f;
 	TimeFromLastSpawn = 0.f;
 	PawnCounter = 0;
 	MaxSpawnablePawns = 5;
-
-	StartNode = FVector2D(0.f, 0.f);
-	TargetNode = FVector2D(4.f, 5.f);
 }
 
 ///FPS TEMPLATE CODE MODIFIED FROM HERE ON BELOW
@@ -55,7 +56,7 @@ void AGeodroidGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UMapClass::Init(MapDesignWalkableArray, NodeWorldSize, TargetNode);
+	UMapClass::Init(MapDesignWalkableArray, NodeWorldSize, TargetNode, MapMaxSize);
 
 	World = GetWorld();
 
@@ -87,15 +88,13 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 	}
 }
 
-
-
 void AGeodroidGameMode::SpawnEnemy(int32 PawnClassIndex)
 {
 	if (EnemyClassList.Num() != 0 && EnemyClassList[PawnClassIndex]) //EnemyClassList second since it prevent from crashing
 	{
 		if (World)
 		{
-			FVector position = FVector(StartNode.X, StartNode.Y, 60.f);
+			FVector position = FVector(StartNode.X, StartNode.Y, 60.f); //TODO use the Map to get the Start Node
 
 			//Spawn the actor at that location
 			FActorSpawnParameters SpawnParams;

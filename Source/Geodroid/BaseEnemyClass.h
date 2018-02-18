@@ -23,6 +23,8 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	///MEMBER VARIABLE
+
 	//Get a Pathfinding Object for this Enemy
 	UA_Pathfinding* Pathfinder;
 
@@ -38,14 +40,24 @@ private:
 	//Variable storing the current Node of the Pawn
 	FMapNode CurrentNode;
 
+	///MEMBER FUNCTION
+	//Move to next Node Function
+	void MovePawnAlongPathList(float DeltaTime);
+
 public:	
+	///MEMBER VARIABLE
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Speed of the Enemy
+		float EnemyVelocity;
+
+	///MEMBER FUNCTION
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	//virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	//Move to next Node Function
+	
+	//Function to Update the PathList
+	void UpdatePathList();
+	
 
 	
 };

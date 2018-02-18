@@ -21,11 +21,13 @@ FMapNode UMapClass::TargetNode;
 
 ///MEMBER FUNCTIONS
 
-void UMapClass::Init(TArray<FVector2D> _MapDesignWalkableArray, float _WorldNodeSize, FVector2D _TargetNode)
+void UMapClass::Init(TArray<FVector2D> _MapDesignWalkableArray, float _WorldNodeSize, FVector2D _TargetNode, FVector2D _MapMaxSize)
 {
 	MapDesignWalkableArray.Append(_MapDesignWalkableArray);
 
 	WorldNodeSize = _WorldNodeSize;
+
+	MapMaxSize = _MapMaxSize;
 	
 	///Creating the Game map grid
 	CreateMapGrid();
@@ -68,7 +70,7 @@ void UMapClass::CreateMapGrid()
 
 	if (IsDebugOn())
 	{
-		DisplayMapForDebug();
+	//	DisplayMapForDebug();
 	}
 }
 

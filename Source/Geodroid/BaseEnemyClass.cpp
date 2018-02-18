@@ -15,29 +15,59 @@ void ABaseEnemyClass::BeginPlay()
 	Super::BeginPlay();
 	Pathfinder = NewObject<UA_Pathfinding>();
 	CurrentNode = UMapClass::WorldToMapNode(GetActorLocation());
-	UE_LOG(LogTemp, Error, TEXT("EnemyNode: %s"), *CurrentNode.NodeIndex.ToString());
-	PathList = Pathfinder->CalculatePath(CurrentNode.NodeIndex, UMapClass::GetTargetNode().NodeIndex);
-	for (int32 PathCounter = 0; PathCounter < PathList.Num(); PathCounter++)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PathList: %s"), *PathList[PathCounter].ToString());
-	}
+	PreviousNode = CurrentNode;
+	EnemyVelocity = 500.f;
+
+	UpdatePathList();
 }
 
 // Called every frame
 void ABaseEnemyClass::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	MovePawnAlongPathList(DeltaTime);
+}
 
-	//Check if the MapNodeStatus has Changed
-		//Update the PathTArray using the Get Path Function
-		//Update the PathCounter to End of the PathTArray.
+void ABaseEnemyClass::UpdatePathList()
+{
+	//Update the PathTArray using the Get Path Function
+	PathList = Pathfinder->CalculatePath(CurrentNode.NodeIndex, UMapClass::GetTargetNode().NodeIndex);
 
-	//Loop till the PathCounter reaches zero
-		//Get the pawn's current pathnode.
-		//if current node is not previous node
-			//Increment the PathCounter
-		//Call MoveToNextNode function with the TargetNode
-		
+	//Update the PathCounter to End of the PathTArray.
+	PathCounter = PathList.Num() - 2; /// -2 since the -1 is Current Node and Next Node is -2
+}
 
+void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
+{
+	if (PathCounter >= 0)
+	{
+		///Get the currentNode
+		CurrentNode = UMapClass::WorldToMapNode(GetActorLocation());
+		FVector TargetVector = -GetActorLocation() + UMapClass::GetMapNodePosition(PathList[PathCounter].X, PathList[PathCounter].Y);
+		///Check if	the CurrentNode is the Previousnode
+
+		if (CurrentNode == PreviousNode)
+		{
+			///Calculate the direction of target
+			FRotator LookRotator = TargetVector.Rotation() - GetActorForwardVector().Rotation();
+			///Correct the pitch
+			LookRotator.Pitch = 0.0f;
+			///Get the Rotator with respect to current rotation
+			LookRotator += GetActorRotation();
+			///Rotate head towards the target
+			SetActorRotation(LookRotator);
+			UE_LOG(LogTemp, Warning, TEXT("Enemy Location: %s"), *CurrentNode.NodeIndex.ToString());
+			///move towards target
+			FVector NewLocation;
+			NewLocation = GetActorLocation() + (GetActorForwardVector() * (EnemyVelocity * DeltaTime));
+			SetActorLocation(NewLocation);
+		}
+		else
+		{
+			PathCounter--;
+		}
+
+		PreviousNode = CurrentNode;
+	}
 }
 

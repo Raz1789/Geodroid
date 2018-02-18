@@ -21,5 +21,8 @@ struct FMapNode
 		bool bWalkable;
 
 	void StructInit(FVector2D _NodeIndex, FVector _Position, bool _bWalkable);
+
+	//Operator "==" for comparing
+	bool operator== (const FMapNode& other) const;
 	
 };
