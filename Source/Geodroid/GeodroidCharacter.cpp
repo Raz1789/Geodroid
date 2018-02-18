@@ -310,14 +310,14 @@ void AGeodroidCharacter::DebugFunction()
 		if(World != NULL)
 		{
 			//Get the Map's Max Size
-			FVector2D MapMaxSize = AGeodroidGameMode::GetMapMaxSize();
+			FVector2D MapMaxSize = UMapClass::GetMapMaxSize();
 			//Iterate through each Node
 			for (int32 X = 0; X < MapMaxSize.X; X++)
 			{
 				for (int32 Y = 0; Y < MapMaxSize.Y; Y++)
 				{
 					//Ask Gamemode for the position of the Node
-					FVector position = AGeodroidGameMode::GetMapNodePosition(X, Y);
+					FVector position = UMapClass::GetMapNodePosition(X, Y);
 					position.Z = 100.f;
 
 					//Spawn the actor at that location

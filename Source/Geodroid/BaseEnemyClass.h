@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "MapNode.h"
+#include "A_Pathfinding.h"
+#include "MapClass.h"
 #include "BaseEnemyClass.generated.h"
 
 UCLASS()
@@ -22,7 +24,7 @@ protected:
 
 private:
 	//Get a Pathfinding Object for this Enemy
-	//UA_Pathfinding* Pathfinder;
+	UA_Pathfinding* Pathfinder;
 
 	//Contain the path that the pawn should follow
 	TArray<FVector2D> PathList;

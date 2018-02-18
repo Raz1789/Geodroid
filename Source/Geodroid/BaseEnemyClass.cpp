@@ -13,11 +13,14 @@ ABaseEnemyClass::ABaseEnemyClass()
 void ABaseEnemyClass::BeginPlay()
 {
 	Super::BeginPlay();
-	//Pathfinder = NewObject<UA_Pathfinding>();
-	/*CurrentNode = AGeodroidGameMode::WorldToMapNode(GetActorLocation());
-	UE_LOG(LogTemp, Error, TEXT("EnemyNode: %s"), *CurrentNode.NodeIndex.ToString());*/
-	//PathList = Pathfinder->CalculatePath(CurrentNode.NodeIndex,)
-	
+	Pathfinder = NewObject<UA_Pathfinding>();
+	CurrentNode = UMapClass::WorldToMapNode(GetActorLocation());
+	UE_LOG(LogTemp, Error, TEXT("EnemyNode: %s"), *CurrentNode.NodeIndex.ToString());
+	PathList = Pathfinder->CalculatePath(CurrentNode.NodeIndex, UMapClass::GetTargetNode().NodeIndex);
+	for (int32 PathCounter = 0; PathCounter < PathList.Num(); PathCounter++)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PathList: %s"), *PathList[PathCounter].ToString());
+	}
 }
 
 // Called every frame

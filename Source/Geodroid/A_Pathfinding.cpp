@@ -77,15 +77,14 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 	}
 	
 	///If MapNodeStatus has Changed or if this is the initial run of this function
-	if (AGeodroidGameMode::IsMapNodeStatusChanged() || MapWalkableArray.Num() == 0)
+	if (UMapClass::IsMapNodeStatusChanged() || MapWalkableArray.Num() == 0)
 	{
 		///Make a copy of the MapWalkableArray in this class and get the MapSize
-		MapWalkableArray.Append(AGeodroidGameMode::GetMapWalkableArray());
-		MapMaxSize = AGeodroidGameMode::GetMapMaxSize();
+		MapWalkableArray.Append(UMapClass::GetMapWalkableArray());
+		MapMaxSize = UMapClass::GetMapMaxSize();
 	}
 
 	///Clearing the temporary variables
-	OpenedList.Sort();
 	OutputList.Empty();
 	OpenedList.Empty();
 	ClosedList.Empty();
@@ -104,82 +103,94 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 	///Loop Till OpenedList is not Empty
 	while (OpenedList.Num() > 0 && LoopCounter < 50)
 	{
-		///Sort OpenedList, assign smallest to ClosedList and remove from OpenList
-		OpenedList.Sort();
-		ClosedList.Add(OpenedList[0]);
-		OpenedList.RemoveAt(0);
-
-		///Getting X and Y of the node that needs to be checked
-		int32 X = ClosedList[ClosedList.Num() - 1]->CurrentMapNode.X;
-		int32 Y = ClosedList[ClosedList.Num() - 1]->CurrentMapNode.Y;
-
-		///Searching the Valid Neighbours for Least FCost
-		for (int32 Counter = 0; Counter < NeighbourList.Num(); Counter++)
+		///Check if the TempNode is the TargetNode
+		if (TempPathNode->CurrentMapNode.X == TargetIndex.X && TempPathNode->CurrentMapNode.Y == TargetIndex.Y)
 		{
-			CheckingNodeVector.X = X + NeighbourList[Counter].X;
-			CheckingNodeVector.Y = Y + NeighbourList[Counter].Y;
+			///Make the OutputList from TempPathnode LinkedList
+			MakePathList(TempPathNode);
 
-			///Checking boundary conditions
-			if (CheckBoundary(CheckingNodeVector))
+			///Return the OutputList
+			return OutputList;
+		}
+		else
+		{
+			///Sort OpenedList, assign smallest to ClosedList and remove from OpenList
+			OpenedList.Sort();
+			ClosedList.Add(OpenedList[0]);
+			OpenedList.RemoveAt(0);
+
+			///Getting X and Y of the node that needs to be checked
+			int32 X = ClosedList[ClosedList.Num() - 1]->CurrentMapNode.X;
+			int32 Y = ClosedList[ClosedList.Num() - 1]->CurrentMapNode.Y;
+
+			///Searching the Valid Neighbours for Least FCost
+			for (int32 Counter = 0; Counter < NeighbourList.Num(); Counter++)
 			{
-				TempPathNode = new PathNode(CheckingNodeVector,
-					ClosedList[ClosedList.Num() - 1],
-					StartIndex,
-					TargetIndex);
+				CheckingNodeVector.X = X + NeighbourList[Counter].X;
+				CheckingNodeVector.Y = Y + NeighbourList[Counter].Y;
 
-				///Check 1: if the TempPathNode is the TargetIndex
-				if ((TempPathNode->CurrentMapNode.X != TargetIndex.X 
-					|| TempPathNode->CurrentMapNode.Y != TargetIndex.Y)
-					&& AGeodroidGameMode::IsMapNodeWalkable(CheckingNodeVector.X,CheckingNodeVector.Y))
+				///Checking boundary conditions
+				if (CheckBoundary(CheckingNodeVector))
 				{
-					///Check 2: if the TempPathNode is not available in the ClosedList
-					if (!ClosedList.ContainsByPredicate(
-						///LAMBDA FUNCTION to check equality
-						[TempPathNode](const PathNode* CheckNode)
-							{
-								return ((TempPathNode->CurrentMapNode.X == CheckNode->CurrentMapNode.X) && (TempPathNode->CurrentMapNode.Y == CheckNode->CurrentMapNode.Y));
-							}
-						))
+					TempPathNode = new PathNode(CheckingNodeVector,
+												ClosedList[ClosedList.Num() - 1],
+												StartIndex,
+												TargetIndex);
+
+					///Check 1: if the TempPathNode is the TargetIndex
+					if ((TempPathNode->CurrentMapNode.X != TargetIndex.X
+						|| TempPathNode->CurrentMapNode.Y != TargetIndex.Y)
+						&& UMapClass::IsMapNodeWalkable(CheckingNodeVector.X, CheckingNodeVector.Y))
 					{
-						///Find the index of TempPathNode in OpenedList
-						int32 IndexOfExistingNode = -1;
-
-						for (int32 OpenedCounter = 0; OpenedCounter < OpenedList.Num(); OpenedCounter++)
+						///Check 2: if the TempPathNode is not available in the ClosedList
+						if (!ClosedList.ContainsByPredicate(
+							///LAMBDA FUNCTION to check equality
+							[TempPathNode](const PathNode* CheckNode)
 						{
-							if (*OpenedList[OpenedCounter] == *TempPathNode)
+							return ((TempPathNode->CurrentMapNode.X == CheckNode->CurrentMapNode.X) && (TempPathNode->CurrentMapNode.Y == CheckNode->CurrentMapNode.Y));
+						}
+							))
+						{
+							///Find the index of TempPathNode in OpenedList
+							int32 IndexOfExistingNode = -1;
+
+							for (int32 OpenedCounter = 0; OpenedCounter < OpenedList.Num(); OpenedCounter++)
 							{
-								IndexOfExistingNode = OpenedCounter;
-								break;
+								if (*OpenedList[OpenedCounter] == *TempPathNode)
+								{
+									IndexOfExistingNode = OpenedCounter;
+									break;
+								}
+							}
+							///Check 3: if the TempPathNode is not available in the OpenedList
+							if (IndexOfExistingNode == -1)
+							{
+								///Add Node to OpenedList
+								OpenedList.Add(TempPathNode);
+							}
+							///Otherwise Check if earlier FCost is Higher
+							else if (OpenedList[IndexOfExistingNode]->FCost > TempPathNode->FCost)
+							{
+								///Add the new Node to the OpenedList
+								if (OpenedList[IndexOfExistingNode]) delete OpenedList[IndexOfExistingNode];
+								OpenedList[IndexOfExistingNode] = TempPathNode;
 							}
 						}
-						///Check 3: if the TempPathNode is not available in the OpenedList
-						if(IndexOfExistingNode == -1)
-						{
-							///Add Node to OpenedList
-							OpenedList.Add(TempPathNode);
-						}
-						///Otherwise Check if earlier FCost is Higher
-						else if (OpenedList[IndexOfExistingNode]->FCost > TempPathNode->FCost)
-						{
-							///Add the new Node to the OpenedList
-							if(OpenedList[IndexOfExistingNode]) delete OpenedList[IndexOfExistingNode];
-							OpenedList[IndexOfExistingNode] = TempPathNode;
-						}
+
 					}
-					
-				}
-				///If target reached
-				else if (CheckingNodeVector.X == TargetIndex.X && CheckingNodeVector.Y == TargetIndex.Y)
-				{
-					///Make the OutputList from TempPathnode LinkedList
-					MakePathList(TempPathNode);
-					
-					///Return the OutputList
-					return OutputList;
+					///If target reached
+					else if (CheckingNodeVector.X == TargetIndex.X && CheckingNodeVector.Y == TargetIndex.Y)
+					{
+						///Make the OutputList from TempPathnode LinkedList
+						MakePathList(TempPathNode);
+
+						///Return the OutputList
+						return OutputList;
+					}
 				}
 			}
+			LoopCounter++;
 		}
-		LoopCounter++;
 	}
 	return TArray<FVector2D>();
 }

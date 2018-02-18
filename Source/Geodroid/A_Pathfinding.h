@@ -2,7 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "GeodroidGameMode.h"
+#include "MapClass.h"
 #include "A_Pathfinding.generated.h"
 
 UCLASS()
