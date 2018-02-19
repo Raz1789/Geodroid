@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Components/SceneComponent.h"
 #include "MapNode.h"
 #include "A_Pathfinding.h"
+#include "BaseEnemyController.h"
 #include "MapClass.h"
 #include "BaseEnemyClass.generated.h"
 
@@ -24,6 +26,10 @@ protected:
 
 private:
 	///MEMBER VARIABLE
+	//Health of the Enemy
+	float EnemyHealth;
+
+	bool IsEnemyDead;
 
 	//Get a Pathfinding Object for this Enemy
 	UA_Pathfinding* Pathfinder;
@@ -47,8 +53,12 @@ private:
 public:	
 	///MEMBER VARIABLE
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Speed of the Enemy
-		float EnemyVelocity;
+	//Speed of the Enemy
+	float EnemyVelocity;
+
+	UFUNCTION()
+	//Subtracts damage from health
+	void ApplyDamage(float Damage);
 
 	///MEMBER FUNCTION
 
