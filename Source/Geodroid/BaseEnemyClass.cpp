@@ -8,8 +8,6 @@ ABaseEnemyClass::ABaseEnemyClass()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;	
 
-	EnemyHealth = 15.f;
-	IsEnemyDead = false;
 }
 
 // Called when the game starts or when spawned
@@ -18,9 +16,37 @@ void ABaseEnemyClass::BeginPlay()
 	Super::BeginPlay();
 	Pathfinder = NewObject<UA_Pathfinding>();
 	CurrentNode = UMapClass::WorldToMapNode(GetActorLocation());
+	IsEnemyDead = false;
 	PreviousNode = CurrentNode;
+	MaxEnemyHealth = 15.f;
+	EnemyHealth = MaxEnemyHealth;
 	EnemyVelocity = 100.f;
 	UpdatePathList();
+	
+	DeathTimer.MaxTime = 2.0f;
+	DeathTimer.CurrentTime = 0.0f;
+}
+
+// Called every frame
+void ABaseEnemyClass::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	if (!IsEnemyDead)
+	{
+		MovePawnAlongPathList(DeltaTime);
+	}
+	else
+	{
+		DeathTimer.CurrentTime += DeltaTime;
+		if (DeathTimer.CurrentTime > DeathTimer.MaxTime)
+		{
+			Destroy();
+		}
+		else
+		{
+			SetActorHiddenInGame(std::cos((180 * DeathTimer.CurrentTime) / (3.14 * 3)) > 0);
+		}
+	}
 }
 
 void ABaseEnemyClass::ApplyDamage(float Damage)
@@ -32,13 +58,6 @@ void ABaseEnemyClass::ApplyDamage(float Damage)
 	}
 }
 
-// Called every frame
-void ABaseEnemyClass::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-	MovePawnAlongPathList(DeltaTime);
-}
-
 void ABaseEnemyClass::UpdatePathList()
 {
 	//Update the PathTArray using the Get Path Function
@@ -46,6 +65,11 @@ void ABaseEnemyClass::UpdatePathList()
 
 	//Update the PathCounter to End of the PathTArray.
 	PathCounter = PathList.Num() - 2; /// -2 since the -1 is Current Node and Next Node is -2
+}
+
+float ABaseEnemyClass::GetHealth()
+{
+	return EnemyHealth / (MaxEnemyHealth * 2);
 }
 
 void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
@@ -73,10 +97,10 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 			SetActorRotation(LookRotator);
 			///move towards target
 			//AddMovementInput(LookRotator.Vector(), 0.1f);
-			UE_LOG(LogTemp, Warning, TEXT("CurrentPosition: %s"), *TargetVector.ToString());
-			UE_LOG(LogTemp, Warning, TEXT("LookRotation: %s"), *LookRotator.ToString());
-			UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), DistanceToTarget);
-			UE_LOG(LogTemp, Warning, TEXT("PathCounter: %s"), *PathList[PathCounter].ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("CurrentPosition: %s"), *TargetVector.ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("LookRotation: %s"), *LookRotator.ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), DistanceToTarget);
+			//UE_LOG(LogTemp, Warning, TEXT("PathCounter: %s"), *PathList[PathCounter].ToString());
 
 			//FVector NewLocation;
 			//NewLocation = GetActorLocation() + (GetActorForwardVector() * (EnemyVelocity * DeltaTime));

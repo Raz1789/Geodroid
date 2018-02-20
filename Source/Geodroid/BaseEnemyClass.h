@@ -26,7 +26,7 @@ protected:
 
 private:
 	///MEMBER VARIABLE
-	//Health of the Enemy
+	//Current Health of the Enemy
 	float EnemyHealth;
 
 	bool IsEnemyDead;
@@ -55,18 +55,40 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 	//Speed of the Enemy
 	float EnemyVelocity;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	//Max Health of the Enemy
+	float MaxEnemyHealth;
 
-	UFUNCTION()
-	//Subtracts damage from health
-	void ApplyDamage(float Damage);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	//BodyColor for flashing the enemy when hit
+	FLinearColor BodyColor;
+
+	struct TimerContainer
+	{
+		float MaxTime;
+		float CurrentTime;
+	};
+
+	//Custom Time Container for setting the DeathtimeCounter
+	TimerContainer DeathTimer;
 
 	///MEMBER FUNCTION
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	//Subtracts damage from health
+	void ApplyDamage(float Damage);
 	
+	UFUNCTION()
 	//Function to Update the PathList
 	void UpdatePathList();
+
+	UFUNCTION(BlueprintCallable)
+	//Get Current Health from 0 - 1 float
+	float GetHealth();
 	
 
 	

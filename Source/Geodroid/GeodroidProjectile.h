@@ -22,6 +22,18 @@ class AGeodroidProjectile : public AActor
 public:
 	AGeodroidProjectile();
 
+	///MEMBER VARIBALES
+
+	/** Projectile Design Variables **/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
+		//Specify the amount of damage the projectile should cause
+		float DamageDelt;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
+		//Specify the initial velocity the projectile will be fired at
+		float InitialVelocity;
+
+
 	/** called when projectile hits something */
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

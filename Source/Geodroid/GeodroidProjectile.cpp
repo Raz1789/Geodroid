@@ -2,10 +2,15 @@
 
 #include "GeodroidProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "BaseEnemyClass.h"
 #include "Components/SphereComponent.h"
 
 AGeodroidProjectile::AGeodroidProjectile() 
 {
+	//Bullet design variable Initialization
+	InitialVelocity = 3000.f;
+	DamageDelt = 5.f;
+
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(5.0f);
@@ -22,8 +27,8 @@ AGeodroidProjectile::AGeodroidProjectile()
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 3000.f;
-	ProjectileMovement->MaxSpeed = 3000.f;
+	ProjectileMovement->InitialSpeed = InitialVelocity;
+	ProjectileMovement->MaxSpeed = InitialVelocity;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
 
@@ -34,10 +39,10 @@ AGeodroidProjectile::AGeodroidProjectile()
 void AGeodroidProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
-	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
+	ABaseEnemyClass* Enemy = Cast<ABaseEnemyClass>(OtherActor);
+	if (Enemy)
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
-
+		Enemy->ApplyDamage(DamageDelt);
 		Destroy();
 	}
 }
