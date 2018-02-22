@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <algorithm>
+#include "GeodroidProjectile.h"
 #include "MapNode.h"
-#include "GeodroidGameMode.h"
+#include "MapClass.h"
 #include "Engine/World.h"
 #include "NodeViewerActor.h"
 #include "GameFramework/Character.h"
@@ -136,6 +138,12 @@ protected:
 	 */
 	bool EnableTouchscreenMovement(UInputComponent* InputComponent);
 
+	//Health of the player
+	float PlayerHealth;
+	
+	//Is player Dead
+	bool bIsPlayerDead;
+
 public:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -147,5 +155,28 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "debug")
 	TSubclassOf<ANodeViewerActor> NodeViewerClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	float PlayerMaxHealth;
+
+	//Function used to add resources from the Enemies
+	void AddGold(int32 AmountReceived);
+
+	//Getter for PlayerGold
+	int32 GetPlayerGold();
+
+	//Returns the PlayerHealth
+	float GetPlayerHealth();
+
+	//Apply required damage to the Player
+	void ApplyDamage(float Damage);
+
+	//Getter for bIsPlayerDead
+	bool IsPlayerDead();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	//Amount of gold player has.
+	int32 PlayerGold;
+
 };
 

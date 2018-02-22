@@ -13,3 +13,8 @@ bool FMapNode::operator==(const FMapNode& Other) const
 {
 	return (NodeIndex.X == Other.NodeIndex.X) && (NodeIndex.Y == Other.NodeIndex.Y);
 }
+
+bool FMapNode::operator!=(const FMapNode& Other) const
+{
+	return !(*this == Other);
+}

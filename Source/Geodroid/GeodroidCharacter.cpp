@@ -1,7 +1,6 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "GeodroidCharacter.h"
-#include "GeodroidProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -102,6 +101,8 @@ void AGeodroidCharacter::BeginPlay()
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
+
+	PlayerGold = 100;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -336,4 +337,33 @@ void AGeodroidCharacter::DebugFunction()
 	{
 		UE_LOG(LogTemp, Error, TEXT("NodeViewer Class not initialized"));
 	}
+}
+
+void AGeodroidCharacter::AddGold(int32 AmountReceived)
+{
+	PlayerGold += AmountReceived;
+}
+
+int32 AGeodroidCharacter::GetPlayerGold()
+{
+	return PlayerGold;
+}
+
+float AGeodroidCharacter::GetPlayerHealth()
+{
+	return PlayerHealth / PlayerMaxHealth;
+}
+
+void AGeodroidCharacter::ApplyDamage(float Damage)
+{
+	PlayerHealth = std::max(0.0f, PlayerHealth - Damage);
+	if (PlayerHealth <= 0 && !bIsPlayerDead)
+	{
+		bIsPlayerDead = true;
+	}
+}
+
+bool AGeodroidCharacter::IsPlayerDead()
+{
+	return bIsPlayerDead;
 }

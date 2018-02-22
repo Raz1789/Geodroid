@@ -8,6 +8,20 @@ ABaseEnemyClass::ABaseEnemyClass()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;	
 
+	/************** Setting the Collision component *********************/
+	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CapsuleComponent"));
+	RootComponent = CollisionComponent;
+	CollisionComponent->SetRelativeScale3D(FVector(1.f, 1.f, 2.f));
+	CollisionComponent->SetSphereRadius(45.f);
+	CollisionComponent->bGenerateOverlapEvents = true;
+	CollisionComponent->bEditableWhenInherited = true;
+	CollisionComponent->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
+	CollisionComponent->SetNotifyRigidBodyCollision(true);
+	CollisionComponent->BodyInstance.SetCollisionProfileName("Projectile");
+	CollisionComponent->SetSimulatePhysics(true);
+
+	/***************** Setting the Component Collision function **********/
+	CollisionComponent->OnComponentHit.AddDynamic(this, &ABaseEnemyClass::OnHit);
 }
 
 // Called when the game starts or when spawned
@@ -22,8 +36,7 @@ void ABaseEnemyClass::BeginPlay()
 	EnemyHealth = MaxEnemyHealth;
 	EnemyVelocity = 100.f;
 	UpdatePathList();
-	
-	DeathTimer.MaxTime = 2.0f;
+	DeathTimer.MaxTime = 1.f;
 	DeathTimer.CurrentTime = 0.0f;
 }
 
@@ -37,24 +50,18 @@ void ABaseEnemyClass::Tick(float DeltaTime)
 	}
 	else
 	{
-		DeathTimer.CurrentTime += DeltaTime;
-		if (DeathTimer.CurrentTime > DeathTimer.MaxTime)
-		{
-			Destroy();
-		}
-		else
-		{
-			SetActorHiddenInGame(std::cos((180 * DeathTimer.CurrentTime) / (3.14 * 3)) > 0);
-		}
+		DeathSequence(DeltaTime);
 	}
+	
 }
 
 void ABaseEnemyClass::ApplyDamage(float Damage)
 {
 	EnemyHealth = std::max(0.0f, EnemyHealth - Damage);
-	if (EnemyHealth <= 0)
+	if (EnemyHealth <= 0 && !IsEnemyDead)
 	{
 		IsEnemyDead = true;
+		SendResourceToPlayer();
 	}
 }
 
@@ -69,7 +76,16 @@ void ABaseEnemyClass::UpdatePathList()
 
 float ABaseEnemyClass::GetHealth()
 {
-	return EnemyHealth / (MaxEnemyHealth * 2);
+	return EnemyHealth / MaxEnemyHealth;
+}
+
+void ABaseEnemyClass::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
+{
+	if (Cast<AGeodroidProjectile>(OtherActor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BulletDamage: %f"), AGeodroidProjectile::GetBulletDamage());
+		ApplyDamage(AGeodroidProjectile::GetBulletDamage());
+	}
 }
 
 void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
@@ -81,11 +97,11 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 		///Get the currentNodea
 		FVector TargetPosition = UMapClass::GetMapNodePosition(PathList[PathCounter].X, PathList[PathCounter].Y);
 		FVector TargetVector = -EnemyPosition + TargetPosition;
-		TargetVector.Z = EnemyPosition.Z;
 		TargetVector.Normalize();
-		float DistanceToTarget = FVector::DistSquared(TargetPosition, EnemyPosition);
-		///Check if the Distance to TargetNode is less than 102
-		if (DistanceToTarget > (2500.f)) ///Since Distance squared used
+
+		float TargetDistance = FVector::DistSquared(TargetPosition, EnemyPosition);
+
+		if (TargetDistance > 2500.f)
 		{
 			///Calculate the direction of target
 			FRotator LookRotator = TargetVector.Rotation() - GetActorForwardVector().Rotation();
@@ -94,18 +110,9 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 			///Get the Rotator with respect to current rotation
 			LookRotator += GetActorRotation();
 			///Rotate head towards the target
-			SetActorRotation(LookRotator);
+			SetActorRotation(FMath::Lerp(GetActorRotation(), LookRotator, 0.15f));
+			
 			///move towards target
-			//AddMovementInput(LookRotator.Vector(), 0.1f);
-			//UE_LOG(LogTemp, Warning, TEXT("CurrentPosition: %s"), *TargetVector.ToString());
-			//UE_LOG(LogTemp, Warning, TEXT("LookRotation: %s"), *LookRotator.ToString());
-			//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), DistanceToTarget);
-			//UE_LOG(LogTemp, Warning, TEXT("PathCounter: %s"), *PathList[PathCounter].ToString());
-
-			//FVector NewLocation;
-			//NewLocation = GetActorLocation() + (GetActorForwardVector() * (EnemyVelocity * DeltaTime));
-			//SetActorLocation(NewLocation);
-
 			AddMovementInput(GetActorForwardVector(), 0.5f);
 		}
 		else
@@ -118,7 +125,39 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 	else if (CurrentNode == UMapClass::GetTargetNode())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Entered: %s"), *CurrentNode.NodeIndex.ToString());
-		Destroy();
+		if (UPointerProtection::CheckAndLog(GetWorld(), "World Pointer"))
+		{
+			GetWorld()->DestroyActor(this);
+		}
+	}
+}
+
+void ABaseEnemyClass::SendResourceToPlayer()
+{
+	if (UPointerProtection::CheckAndLog(GetWorld(), "World"))
+	{
+	/*	if (UPointerProtection::CheckAndLog(Cast<AGeodroidCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()), "Player Actor"))
+		{
+			AGeodroidCharacter* Player = Cast<AGeodroidCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+			Player->AddGold(EnemyGold);
+		}*/
+	}
+
+}
+
+void ABaseEnemyClass::DeathSequence(float DeltaTime)
+{
+	DeathTimer.CurrentTime += DeltaTime;
+	if (DeathTimer.CurrentTime > DeathTimer.MaxTime)
+	{
+		if (UPointerProtection::CheckAndLog(GetWorld(), "World Pointer"))
+		{
+			GetWorld()->DestroyActor(this);
+		}
+	}
+	else
+	{
+		SetActorHiddenInGame(std::cos((180 * DeathTimer.CurrentTime) / (3.14 * 3)) > 0);
 	}
 }
 

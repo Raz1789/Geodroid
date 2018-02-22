@@ -22,7 +22,10 @@ struct FMapNode
 
 	void StructInit(FVector2D _NodeIndex, FVector _Position, bool _bWalkable);
 
-	//Operator "==" for comparing
-	bool operator== (const FMapNode& other) const;
-	
+	//Operator "==" overloading for custom comparing
+	bool operator== (const FMapNode& Other) const;
+
+	//Operator "!=" overloading for custom comparing
+	bool operator!= (const FMapNode& Other) const;
+
 };

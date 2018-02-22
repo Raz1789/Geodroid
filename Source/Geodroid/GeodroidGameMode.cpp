@@ -32,8 +32,8 @@ AGeodroidGameMode::AGeodroidGameMode()
 		MapDesignWalkableArray.Add(FVector2D(3, -4));
 		MapDesignWalkableArray.Add(FVector2D(4, -4));
 		MapDesignWalkableArray.Add(FVector2D(5, 2));
+		MapDesignWalkableArray.Add(FVector2D(5, 3));
 		MapDesignWalkableArray.Add(FVector2D(5, -4));
-		MapDesignWalkableArray.Add(FVector2D(6, 2));
 		MapDesignWalkableArray.Add(FVector2D(6, -4));
 		MapDesignWalkableArray.Add(FVector2D(7, -4));
 		MapDesignWalkableArray.Add(FVector2D(8, -4));
@@ -71,11 +71,9 @@ void AGeodroidGameMode::BeginPlay()
 
 	UMapClass::Init(MapDesignWalkableArray, NodeWorldSize, TargetNode, MapMaxSize);
 
-	World = GetWorld();
-
-	if (UMapClass::IsDebugOn())
+	if (UPointerProtection::CheckAndLog(GetWorld(), "World"))
 	{
-		if (!World) UE_LOG(LogTemp, Error, TEXT("World Not Initialized"));
+		World = GetWorld();
 	}
 	
 }
@@ -103,21 +101,15 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 
 void AGeodroidGameMode::SpawnEnemy(int32 PawnClassIndex)
 {
+	if (!World) return;
 	if (EnemyClassList.Num() != 0 && EnemyClassList[PawnClassIndex]) //EnemyClassList second since it prevent from crashing
 	{
-		if (World)
-		{
-			FVector position = FVector(StartNode.X, StartNode.Y, 50.f); //TODO use the Map to get the Start Node
+			FVector position = FVector(StartNode.X, StartNode.Y, 100.f); //TODO use the Map to get the Start Node
 
 			//Spawn the actor at that location
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 			EnemyList.Add(World->SpawnActor<ABaseEnemyClass>(EnemyClassList[PawnClassIndex], position, FRotator(0.f), SpawnParams));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("GetWorld not initialized"));
-		}
 	}
 	else
 	{

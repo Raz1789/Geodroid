@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "Components/SceneComponent.h"
+#include "Components/SphereComponent.h"
+#include "Engine/World.h"
+#include "PointerProtection.h"
 #include "MapNode.h"
 #include "A_Pathfinding.h"
-#include "BaseEnemyController.h"
+#include "GeodroidProjectile.h"
 #include "MapClass.h"
+#include "GeodroidCharacter.h"
 #include "BaseEnemyClass.generated.h"
 
 UCLASS()
@@ -21,10 +24,6 @@ public:
 	ABaseEnemyClass();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-private:
 	///MEMBER VARIABLE
 	//Current Health of the Enemy
 	float EnemyHealth;
@@ -46,9 +45,24 @@ private:
 	//Variable storing the current Node of the Pawn
 	FMapNode CurrentNode;
 
+	
+	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
+	//Collision capsule
+	//TODO work on the collision aspect
+	USphereComponent* CollisionComponent = nullptr;
+
 	///MEMBER FUNCTION
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
 	//Move to next Node Function
 	void MovePawnAlongPathList(float DeltaTime);
+
+	//Function to sent Gold to Player
+	void SendResourceToPlayer();
+
+	//Initial the death sequence
+	void DeathSequence(float DeltaTime);
 
 public:	
 	///MEMBER VARIABLE
@@ -61,8 +75,9 @@ public:
 	float MaxEnemyHealth;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-	//BodyColor for flashing the enemy when hit
-	FLinearColor BodyColor;
+	//The amount of gold this enemy gives
+	int32 EnemyGold;
+
 
 	struct TimerContainer
 	{
@@ -89,7 +104,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	//Get Current Health from 0 - 1 float
 	float GetHealth();
-	
 
+	UFUNCTION()
+	//Function to activate if the Enemy is hit
+	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
 };

@@ -2,14 +2,17 @@
 
 #include "GeodroidProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "BaseEnemyClass.h"
 #include "Components/SphereComponent.h"
+
+//STATIC VARIABLE DECLARATION
+float AGeodroidProjectile::BulletDamage;
 
 AGeodroidProjectile::AGeodroidProjectile() 
 {
 	//Bullet design variable Initialization
 	InitialVelocity = 3000.f;
-	DamageDelt = 5.f;
+	BP_BulletDamage = 1.0f;
+	BulletDamage = BP_BulletDamage;
 
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
@@ -38,11 +41,10 @@ AGeodroidProjectile::AGeodroidProjectile()
 
 void AGeodroidProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics
-	ABaseEnemyClass* Enemy = Cast<ABaseEnemyClass>(OtherActor);
-	if (Enemy)
-	{
-		Enemy->ApplyDamage(DamageDelt);
 		Destroy();
-	}
+}
+
+float AGeodroidProjectile::GetBulletDamage()
+{
+	return BulletDamage;
 }

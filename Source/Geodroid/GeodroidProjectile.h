@@ -19,20 +19,12 @@ class AGeodroidProjectile : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	class UProjectileMovementComponent* ProjectileMovement;
 
+	//MEMBER VARIABLE
+	//Static variable storing the Bullet Damage
+	static float BulletDamage;
+
 public:
 	AGeodroidProjectile();
-
-	///MEMBER VARIBALES
-
-	/** Projectile Design Variables **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
-		//Specify the amount of damage the projectile should cause
-		float DamageDelt;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
-		//Specify the initial velocity the projectile will be fired at
-		float InitialVelocity;
-
 
 	/** called when projectile hits something */
 	UFUNCTION()
@@ -42,5 +34,19 @@ public:
 	FORCEINLINE class USphereComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
 	FORCEINLINE class UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	///MEMBER VARIBALES
+
+	/** Projectile Design Variables **/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
+		//Specify the amount of damage the projectile should cause in blueprint
+		float BP_BulletDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
+		//Specify the initial velocity the projectile will be fired at
+		float InitialVelocity;
+
+	//Getter for the BulletDamage Variable;
+	static float GetBulletDamage();
 };
 
