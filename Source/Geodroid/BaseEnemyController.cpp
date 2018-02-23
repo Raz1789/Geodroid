@@ -3,8 +3,4 @@
 #include "BaseEnemyController.h"
 
 
-void ABaseEnemyController::MoveToPosition(FVector _Position)
-{
-	MoveToLocation(_Position, 50.f);
-}
 

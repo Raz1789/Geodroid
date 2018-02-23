@@ -39,9 +39,6 @@ protected:
 	//A counter storing the index of the target node from the PathList
 	int32 PathCounter;
 
-	//Variable storing the previous Node in the Tick Iteration
-	FMapNode PreviousNode;
-
 	//Variable storing the current Node of the Pawn
 	FMapNode CurrentNode;
 

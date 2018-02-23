@@ -54,6 +54,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
 		static FMapNode GetTargetNode();
+	
+	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
+		static float GetWorldNodeSize();
 
 private:
 	///MEMBER VARIABLES ****************************************************************

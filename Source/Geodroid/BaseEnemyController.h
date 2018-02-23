@@ -15,7 +15,6 @@ class GEODROID_API ABaseEnemyController : public AAIController
 	GENERATED_BODY()
 
 public:
-	void MoveToPosition(FVector _Position);
 	
 	
 };

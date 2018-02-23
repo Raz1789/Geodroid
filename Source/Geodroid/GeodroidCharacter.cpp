@@ -80,6 +80,11 @@ AGeodroidCharacter::AGeodroidCharacter()
 
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
+
+	///MODIFIED AFTER THIS POINT FROM THE ORIGINAL TEMPLATE
+	PlayerGold = 100;
+	PlayerMaxHealth = 100.f;
+	PlayerHealth = PlayerMaxHealth;
 }
 
 void AGeodroidCharacter::BeginPlay()
@@ -303,6 +308,18 @@ bool AGeodroidCharacter::EnableTouchscreenMovement(class UInputComponent* Player
 	return false;
 }
 
+bool AGeodroidCharacter::DeductStructureCost(int32 AmountToBeDeducted)
+{
+	bool bCanBeSubracted = (PlayerGold > AmountToBeDeducted);
+
+	if (bCanBeSubracted)
+	{
+		PlayerGold -= AmountToBeDeducted;
+	}
+
+	return bCanBeSubracted;
+}
+
 void AGeodroidCharacter::DebugFunction()
 {
 	if (NodeViewerClass != NULL)
@@ -344,12 +361,12 @@ void AGeodroidCharacter::AddGold(int32 AmountReceived)
 	PlayerGold += AmountReceived;
 }
 
-int32 AGeodroidCharacter::GetPlayerGold()
+int32 AGeodroidCharacter::GetPlayerGold() const
 {
 	return PlayerGold;
 }
 
-float AGeodroidCharacter::GetPlayerHealth()
+float AGeodroidCharacter::GetPlayerHealth() const
 {
 	return PlayerHealth / PlayerMaxHealth;
 }

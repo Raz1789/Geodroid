@@ -144,6 +144,14 @@ protected:
 	//Is player Dead
 	bool bIsPlayerDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
+	//Amount of gold player has.
+	int32 PlayerGold;
+
+	///**************** MEMBER FUNCTIONS ************************///
+	//Deducts the cost of structure from the Player and returns if it is possible to construct
+	bool DeductStructureCost(int32 AmountToBeReceived);
+
 public:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
@@ -156,27 +164,28 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "debug")
 	TSubclassOf<ANodeViewerActor> NodeViewerClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
 	float PlayerMaxHealth;
 
 	//Function used to add resources from the Enemies
-	void AddGold(int32 AmountReceived);
+	void AddGold(int32 AmountToBeReceived);
 
+	//Function used to add resources from the Enemies
+	bool SubtractGold(int32 AmountToBeDeducted);
+
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	//Getter for PlayerGold
-	int32 GetPlayerGold();
+	int32 GetPlayerGold() const;
 
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	//Returns the PlayerHealth
-	float GetPlayerHealth();
+	float GetPlayerHealth() const;
 
 	//Apply required damage to the Player
 	void ApplyDamage(float Damage);
 
 	//Getter for bIsPlayerDead
 	bool IsPlayerDead();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-	//Amount of gold player has.
-	int32 PlayerGold;
 
 };
 

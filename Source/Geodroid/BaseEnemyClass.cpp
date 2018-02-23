@@ -17,7 +17,6 @@ ABaseEnemyClass::ABaseEnemyClass()
 	CollisionComponent->bEditableWhenInherited = true;
 	CollisionComponent->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
-	CollisionComponent->BodyInstance.SetCollisionProfileName("Projectile");
 	CollisionComponent->SetSimulatePhysics(true);
 
 	/***************** Setting the Component Collision function **********/
@@ -31,7 +30,6 @@ void ABaseEnemyClass::BeginPlay()
 	Pathfinder = NewObject<UA_Pathfinding>();
 	CurrentNode = UMapClass::WorldToMapNode(GetActorLocation());
 	IsEnemyDead = false;
-	PreviousNode = CurrentNode;
 	MaxEnemyHealth = 15.f;
 	EnemyHealth = MaxEnemyHealth;
 	EnemyVelocity = 100.f;
@@ -83,25 +81,33 @@ void ABaseEnemyClass::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, 
 {
 	if (Cast<AGeodroidProjectile>(OtherActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BulletDamage: %f"), AGeodroidProjectile::GetBulletDamage());
 		ApplyDamage(AGeodroidProjectile::GetBulletDamage());
+		UE_LOG(LogTemp, Warning, TEXT("EnemyHealth: %f"), GetHealth());
 	}
 }
 
 void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 {
 	FVector EnemyPosition = GetActorLocation();
+	/// Get Enemy node from the Map nodes
 	CurrentNode = UMapClass::WorldToMapNode(EnemyPosition);
+
 	if (PathCounter >= 0)
 	{
-		///Get the currentNodea
+		///Get the next Target Node Position in World
 		FVector TargetPosition = UMapClass::GetMapNodePosition(PathList[PathCounter].X, PathList[PathCounter].Y);
+
+		///Make EnemyPosition.Z and TargetPosition.Z same to eleminate the distance error caused will calculating distance
+		EnemyPosition.Z = TargetPosition.Z;
+
+		///Get Normalized Vector to Target
 		FVector TargetVector = -EnemyPosition + TargetPosition;
 		TargetVector.Normalize();
 
+		///Calculate the distance to next node
 		float TargetDistance = FVector::DistSquared(TargetPosition, EnemyPosition);
 
-		if (TargetDistance > 2500.f)
+		if (TargetDistance > 10000.f) /// 10000 => 100 distance squared
 		{
 			///Calculate the direction of target
 			FRotator LookRotator = TargetVector.Rotation() - GetActorForwardVector().Rotation();
@@ -117,12 +123,11 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 		}
 		else
 		{
+			///If Target Reached, Point Counter to next Target on PathList
 			PathCounter--;
 		}
-
-		PreviousNode = CurrentNode;
 	}
-	else if (CurrentNode == UMapClass::GetTargetNode())
+	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Entered: %s"), *CurrentNode.NodeIndex.ToString());
 		if (UPointerProtection::CheckAndLog(GetWorld(), "World Pointer"))
@@ -136,11 +141,11 @@ void ABaseEnemyClass::SendResourceToPlayer()
 {
 	if (UPointerProtection::CheckAndLog(GetWorld(), "World"))
 	{
-	/*	if (UPointerProtection::CheckAndLog(Cast<AGeodroidCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()), "Player Actor"))
+		if (UPointerProtection::CheckAndLog(Cast<AGeodroidCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn()), "Player Actor"))
 		{
 			AGeodroidCharacter* Player = Cast<AGeodroidCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
 			Player->AddGold(EnemyGold);
-		}*/
+		}
 	}
 
 }

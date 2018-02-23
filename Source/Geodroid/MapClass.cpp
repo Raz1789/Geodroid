@@ -170,6 +170,11 @@ FMapNode UMapClass::GetTargetNode()
 	return TargetNode;
 }
 
+float UMapClass::GetWorldNodeSize()
+{
+	return WorldNodeSize;
+}
+
 void UMapClass::MapWalkableExtractor()
 {
 	MapWalkableArray.Empty();
