@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "DrawDebugHelpers.h"
 #include "Components/SphereComponent.h"
 #include "Engine/World.h"
 #include "PointerProtection.h"
@@ -12,7 +13,17 @@
 #include "GeodroidProjectile.h"
 #include "MapClass.h"
 #include "GeodroidCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "BaseEnemyClass.generated.h"
+
+UENUM()
+enum class EnemyState : uint8
+{
+	FollowPath,
+	FollowPlayer,
+	Dead
+};
+
 
 UCLASS()
 class GEODROID_API ABaseEnemyClass : public APawn
@@ -25,10 +36,20 @@ public:
 
 protected:
 	///MEMBER VARIABLE
+	//Get the World
+	UWorld* World;
+
+	//The Player Actor
+	AGeodroidCharacter* Player;
+
 	//Current Health of the Enemy
 	float EnemyHealth;
 
-	bool IsEnemyDead;
+	//Current Enemy State
+	EnemyState CurrentState;
+
+	//Previous Enemy State
+	EnemyState PreviousState;
 
 	//Get a Pathfinding Object for this Enemy
 	UA_Pathfinding* Pathfinder;
@@ -42,6 +63,24 @@ protected:
 	//Variable storing the current Node of the Pawn
 	FMapNode CurrentNode;
 
+	//Time Lapsed after last fire
+	float TimeFromLastFire;
+
+	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
+		//Projectile class
+	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
+
+	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
+		//Attack Damage of the Enemy
+		float AttackDamage;
+
+	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
+		//Location from where the projectile is launched
+		FVector FireLocation;
+
+	/** Sound to play each time we fire */
+	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
+		class USoundBase* FireSound;
 	
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
 	//Collision capsule
@@ -61,11 +100,26 @@ protected:
 	//Initial the death sequence
 	void DeathSequence(float DeltaTime);
 
+	//Fire at player if distance is less
+	void ShootAtPlayer();
+
+	//Check if player visible and in Range
+	bool IsPlayerInVisibleRange();
+
+	//Move Enemy to the Target Vector provided
+	void MoveToTargetVector(const FVector& TargetVector);
+
+	
+
 public:	
 	///MEMBER VARIABLE
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 	//Speed of the Enemy
 	float EnemyVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Fire Rate of Enemy
+		float EnemyFireRate;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 	//Max Health of the Enemy
@@ -96,7 +150,7 @@ public:
 	
 	UFUNCTION()
 	//Function to Update the PathList
-	void UpdatePathList();
+	void UpdatePathList(FVector2D TargetNodeIndex = UMapClass::GetTargetNode().NodeIndex);
 
 	UFUNCTION(BlueprintCallable)
 	//Get Current Health from 0 - 1 float

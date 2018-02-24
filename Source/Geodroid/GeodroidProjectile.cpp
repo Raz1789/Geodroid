@@ -4,15 +4,14 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 
-//STATIC VARIABLE DECLARATION
-float AGeodroidProjectile::BulletDamage;
+///STATIC VARIABLE INIT
+float AGeodroidProjectile::InitialVelocity = 3000.f;
+float AGeodroidProjectile::BulletDamage = 1.0f;
 
-AGeodroidProjectile::AGeodroidProjectile() 
+AGeodroidProjectile::AGeodroidProjectile()
 {
 	//Bullet design variable Initialization
-	InitialVelocity = 3000.f;
-	BP_BulletDamage = 1.0f;
-	BulletDamage = BP_BulletDamage;
+
 
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
@@ -37,6 +36,7 @@ AGeodroidProjectile::AGeodroidProjectile()
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
+	BulletDamage = BulletDamage;
 }
 
 void AGeodroidProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)

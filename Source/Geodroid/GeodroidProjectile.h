@@ -11,6 +11,8 @@ class AGeodroidProjectile : public AActor
 {
 	GENERATED_BODY()
 
+
+protected:
 	/** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category=Projectile)
 	class USphereComponent* CollisionComp;
@@ -20,8 +22,9 @@ class AGeodroidProjectile : public AActor
 	class UProjectileMovementComponent* ProjectileMovement;
 
 	//MEMBER VARIABLE
-	//Static variable storing the Bullet Damage
-	static float BulletDamage;
+
+	///MEMEBER FUNCTIONS
+	//virtual void BeginPlay() override;
 
 public:
 	AGeodroidProjectile();
@@ -38,15 +41,13 @@ public:
 	///MEMBER VARIBALES
 
 	/** Projectile Design Variables **/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
-		//Specify the amount of damage the projectile should cause in blueprint
-		float BP_BulletDamage;
+	//Specify the amount of damage the projectile should cause in blueprint
+	static float BulletDamage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
-		//Specify the initial velocity the projectile will be fired at
-		float InitialVelocity;
+	//Specify the initial velocity the projectile will be fired at
+	static float InitialVelocity;
 
 	//Getter for the BulletDamage Variable;
-	static float GetBulletDamage();
+	float GetBulletDamage();
 };
 

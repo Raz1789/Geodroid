@@ -65,7 +65,7 @@ UA_Pathfinding::PathNode::~PathNode()
 #pragma region CLASS MEMBER FUNCTION DEFINITIONS
 
 TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
-	FVector2D TargetIndex)
+	FVector2D TargetIndex, bool bPathExistCheck)
 {
 	///Initializing NeighbourList only first time
 	if (NeighbourList.Num() == 0)
@@ -79,15 +79,15 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 	///If MapNodeStatus has Changed or if this is the initial run of this function
 	if (UMapClass::IsMapNodeStatusChanged() || MapWalkableArray.Num() == 0)
 	{
+		MapWalkableArray.Reset(0);
 		///Make a copy of the MapWalkableArray in this class and get the MapSize
 		MapWalkableArray.Append(UMapClass::GetMapWalkableArray());
 		MapMaxSize = UMapClass::GetMapMaxSize();
 	}
 
-	///Clearing the temporary variables
-	OutputList.Empty();
-	OpenedList.Empty();
-	ClosedList.Empty();
+	///Creating the temporary variables
+	TArray<PathNode*> OpenedList;
+	TArray<PathNode*> ClosedList;
 
 	///Create a temporary PathNode for initial location
 	PathNode* TempPathNode = new PathNode(StartIndex, nullptr, StartIndex, TargetIndex);
@@ -107,10 +107,7 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 		if (TempPathNode->CurrentMapNode.X == TargetIndex.X && TempPathNode->CurrentMapNode.Y == TargetIndex.Y)
 		{
 			///Make the OutputList from TempPathnode LinkedList
-			MakePathList(TempPathNode);
-
-			///Return the OutputList
-			return OutputList;
+			return MakePathList(TempPathNode);
 		}
 		else
 		{
@@ -146,9 +143,10 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 						if (!ClosedList.ContainsByPredicate(
 							///LAMBDA FUNCTION to check equality
 							[TempPathNode](const PathNode* CheckNode)
-						{
-							return ((TempPathNode->CurrentMapNode.X == CheckNode->CurrentMapNode.X) && (TempPathNode->CurrentMapNode.Y == CheckNode->CurrentMapNode.Y));
-						}
+								{
+									return ((TempPathNode->CurrentMapNode.X == CheckNode->CurrentMapNode.X)
+											&& (TempPathNode->CurrentMapNode.Y == CheckNode->CurrentMapNode.Y));
+								}
 							))
 						{
 							///Find the index of TempPathNode in OpenedList
@@ -181,11 +179,8 @@ TArray<FVector2D> UA_Pathfinding::CalculatePath(FVector2D StartIndex,
 					///If target reached
 					else if (CheckingNodeVector.X == TargetIndex.X && CheckingNodeVector.Y == TargetIndex.Y)
 					{
-						///Make the OutputList from TempPathnode LinkedList
-						MakePathList(TempPathNode);
-
 						///Return the OutputList
-						return OutputList;
+						return MakePathList(TempPathNode);
 					}
 				}
 			}
@@ -203,15 +198,18 @@ bool UA_Pathfinding::CheckBoundary(FVector2D &TempVector) const
 		TempVector.Y < MapMaxSize.Y;
 }
 
-void UA_Pathfinding::MakePathList(PathNode* FinalPathNode)
+TArray<FVector2D> UA_Pathfinding::MakePathList(PathNode* FinalPathNode)
 {
-	OutputList.Empty();
+	TArray<FVector2D> OutputList;
+
 	//Loop Till all the PathNodes in the PathNode LinkedList is transfered to OutputList
 	while (FinalPathNode)
 	{
 		OutputList.Add(FinalPathNode->CurrentMapNode);
 		FinalPathNode = FinalPathNode->PreviousPathNode;
 	}
+
+	return OutputList;
 }
 
 

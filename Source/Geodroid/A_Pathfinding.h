@@ -43,25 +43,16 @@ private:
 		~PathNode();
 	};
 
-	//Open List variable created for speed optimization
-	TArray<PathNode*> OpenedList;
-
-	//Closed List variable created for speed optimization
-	TArray<PathNode*> ClosedList;
-
-	//Open List variable created for speed optimization
-	TArray<FVector2D> OutputList;
-
 	//List of index subtractors for finding the neighbours
 	TArray<FVector2D> NeighbourList;
 
 public:
 
 	//Calculate the Path
-	TArray<FVector2D> CalculatePath(FVector2D StartIndex, FVector2D EndIndex);
+	TArray<FVector2D> CalculatePath(FVector2D StartIndex, FVector2D EndIndex, bool bPathExistCheck = false);
 
 	bool CheckBoundary(FVector2D &TempVector) const;
 
-	void MakePathList(PathNode* FinalPathNode);
+	TArray<FVector2D> MakePathList(PathNode* FinalPathNode);
 
 };

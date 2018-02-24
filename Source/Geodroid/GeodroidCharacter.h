@@ -148,6 +148,10 @@ protected:
 	//Amount of gold player has.
 	int32 PlayerGold;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
+		//Attack Damage per shot from the player
+		float AttackDamage;
+
 	///**************** MEMBER FUNCTIONS ************************///
 	//Deducts the cost of structure from the Player and returns if it is possible to construct
 	bool DeductStructureCost(int32 AmountToBeReceived);
@@ -186,6 +190,10 @@ public:
 
 	//Getter for bIsPlayerDead
 	bool IsPlayerDead();
+
+	UFUNCTION()
+		//Function to activate if the Player is hit
+		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 };
 

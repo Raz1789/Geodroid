@@ -84,7 +84,11 @@ AGeodroidCharacter::AGeodroidCharacter()
 	///MODIFIED AFTER THIS POINT FROM THE ORIGINAL TEMPLATE
 	PlayerGold = 100;
 	PlayerMaxHealth = 100.f;
-	PlayerHealth = PlayerMaxHealth;
+	AttackDamage = 1.0f;
+
+	/***************** Setting the Component Collision function **********/
+	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AGeodroidCharacter::OnHit);
 }
 
 void AGeodroidCharacter::BeginPlay()
@@ -107,7 +111,8 @@ void AGeodroidCharacter::BeginPlay()
 		Mesh1P->SetHiddenInGame(false, true);
 	}
 
-	PlayerGold = 100;
+
+	PlayerHealth = PlayerMaxHealth;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -145,6 +150,9 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 
 void AGeodroidCharacter::OnFire()
 {
+
+	AGeodroidProjectile::BulletDamage = AttackDamage;
+
 	// try and fire a projectile
 	if (ProjectileClass != NULL)
 	{
@@ -361,6 +369,19 @@ void AGeodroidCharacter::AddGold(int32 AmountReceived)
 	PlayerGold += AmountReceived;
 }
 
+bool AGeodroidCharacter::SubtractGold(int32 AmountToBeDeducted)
+{
+	if (AmountToBeDeducted > PlayerGold)
+	{
+		return false;
+	}
+	else
+	{
+		PlayerGold -= AmountToBeDeducted;
+		return true;
+	}
+}
+
 int32 AGeodroidCharacter::GetPlayerGold() const
 {
 	return PlayerGold;
@@ -374,6 +395,7 @@ float AGeodroidCharacter::GetPlayerHealth() const
 void AGeodroidCharacter::ApplyDamage(float Damage)
 {
 	PlayerHealth = std::max(0.0f, PlayerHealth - Damage);
+	UE_LOG(LogTemp, Warning, TEXT("Player health: %f"), PlayerHealth);
 	if (PlayerHealth <= 0 && !bIsPlayerDead)
 	{
 		bIsPlayerDead = true;
@@ -383,4 +405,15 @@ void AGeodroidCharacter::ApplyDamage(float Damage)
 bool AGeodroidCharacter::IsPlayerDead()
 {
 	return bIsPlayerDead;
+}
+
+void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
+{
+	AGeodroidProjectile* Collider = Cast<AGeodroidProjectile>(OtherActor);
+	if (Collider)
+	{
+		ApplyDamage(Collider->GetBulletDamage());
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Player health: %f"), PlayerHealth);
 }

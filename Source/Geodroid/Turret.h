@@ -6,15 +6,14 @@
 #include "DefenseStructures.h"
 #include "WorldCollision.h"
 #include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "GeodroidProjectile.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 #include "PointerProtection.h"
 #include "DrawDebugHelpers.h"
 #include "MapClass.h"
 #include "Turret.generated.h"
-
-/**
- * 
- */
 
 UCLASS()
 class GEODROID_API ATurret : public ADefenseStructures
@@ -38,12 +37,23 @@ protected:
 	//Actor Node in Map
 	FVector2D CurrentMapNode;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+	//Projectile class
+	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
+
+	/** Sound to play each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		class USoundBase* FireSound;
+
 	//Stores the Target Actor
 	AActor* TargetActor = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Getter Variable")
-	//Turret Rotator
-	FRotator TurretRotator;
+	//Time from last shot was fired
+	float TimeFromLastFire;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Turret Rotator
+		UStaticMeshComponent* BP_Turret;
 
 	///***************** MEMBER FUNCTION ************************///
 	virtual void BeginPlay() override;
@@ -54,7 +64,11 @@ protected:
 
 	UFUNCTION()
 	//Check if the Enemy inside the InfluenceCircle is visible and take necessary action
-	void CheckAndExecuteAttack(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void CheckAndExecuteAttack();
+
+	UFUNCTION()
+		//Shoot at Enemy
+		void ShootAtEnemy(const  AActor* TargetEnemy);
 
 
 public:
@@ -70,6 +84,7 @@ public:
 	//Color of Material
 	FColor MaterialColor;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 	//Inner Collision Box representing the Turret Area Restriction
 	UBoxComponent* RestrictionArea;
 	

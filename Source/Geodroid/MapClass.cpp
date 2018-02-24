@@ -157,6 +157,7 @@ bool UMapClass::IsMapNodeStatusChanged()
 
 TArray<bool> UMapClass::GetMapWalkableArray()
 {
+	MapWalkableExtractor();
 	return MapWalkableArray;
 }
 

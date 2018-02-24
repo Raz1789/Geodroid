@@ -56,7 +56,6 @@ AGeodroidGameMode::AGeodroidGameMode()
 
 	///ENEMY DESIGN VARIABLES
 	TimeBetweenSpawn = 1.f;
-	TimeFromLastSpawn = 0.f;
 	PawnCounter = 0;
 	MaxSpawnablePawns = 5;
 }
@@ -67,7 +66,7 @@ void AGeodroidGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	TimeFromLastSpawn = TimeBetweenSpawn; //To spawn immediately;
 
 	UMapClass::Init(MapDesignWalkableArray, NodeWorldSize, TargetNode, MapMaxSize);
 
