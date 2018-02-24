@@ -162,7 +162,7 @@ void ABaseEnemyClass::UpdatePathList(FVector2D TargetNodeIndex)
 	Pathfinder = NewObject<UA_Pathfinding>();
 
 	//Update the PathTArray using the Get Path Function
-	PathList.Append(Pathfinder->CalculatePath(CurrentNode.NodeIndex));
+	PathList.Append(Pathfinder->GetPathList(CurrentNode.NodeIndex));
 
 	//Update the PathCounter to End of the PathTArray.
 	PathCounter = PathList.Num() - 2; /// -2 since the -1 is Current Node and Next Node is -2

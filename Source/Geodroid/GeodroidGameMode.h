@@ -10,6 +10,20 @@
 #include "algorithm"
 #include "GeodroidGameMode.generated.h"
 
+UENUM()
+enum class EGameState : uint8
+{
+	EGS_GameBegan,
+	EGS_WaveParamLoading,
+	EGS_PlayerWavePrepTime,
+	EGS_WaveRunning,
+	EGS_WaveEnded,
+	EGS_ParamResetting,
+	EGS_GameLost,
+	EGS_GameEnded
+};
+
+
 UCLASS(minimalapi)
 class AGeodroidGameMode : public AGameModeBase
 {
@@ -60,6 +74,10 @@ public:
 		float TimeBetweenSpawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
+		//Start Game Delay
+		float TimeBeforeGameStart;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
 		TArray<TSubclassOf<ABaseEnemyClass>> EnemyClassList;
 
 private:
@@ -77,6 +95,8 @@ private:
 
 	//Array containing all the pawns
 	TArray<ABaseEnemyClass*> EnemyList;
+
+	//Variable keeping the time 
 	
 	///MEMBER FUNCTIONS
 

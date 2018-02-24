@@ -11,8 +11,6 @@ class UA_Pathfinding : public UObject
 	GENERATED_BODY()
 
 private:
-	//Copy of the GameMode MapWalkableArray Variable
-	TArray<bool> MapWalkableArray;
 
 	//Size of the GameMode Map
 	FVector2D MapMaxSize;
@@ -48,8 +46,13 @@ private:
 
 public:
 
+	//Constructor for UA_Pathfinding
+	UA_Pathfinding();
+
 	//Calculate the Path
-	TArray<FVector2D> CalculatePath(FVector2D StartIndex, FVector2D EndIndex = UMapClass::GetTargetNode().NodeIndex, bool bPathExistCheck = false);
+	TArray<FVector2D> GetPathList(FVector2D StartIndex, FVector2D EndIndex = UMapClass::GetTargetNode().NodeIndex);
+
+	bool CalculatePathList(TArray<FVector2D>& OutPathList, const FVector2D& StartIndex, const FVector2D& EndIndex = UMapClass::GetTargetNode().NodeIndex, bool bIsThisACheckOnly = true);
 
 	bool CheckBoundary(FVector2D &TempVector) const;
 
