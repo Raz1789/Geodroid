@@ -49,10 +49,13 @@ private:
 public:
 
 	//Calculate the Path
-	TArray<FVector2D> CalculatePath(FVector2D StartIndex, FVector2D EndIndex, bool bPathExistCheck = false);
+	TArray<FVector2D> CalculatePath(FVector2D StartIndex, FVector2D EndIndex = UMapClass::GetTargetNode().NodeIndex, bool bPathExistCheck = false);
 
 	bool CheckBoundary(FVector2D &TempVector) const;
 
+	//Make PathList from the PathNode LinkedList
 	TArray<FVector2D> MakePathList(PathNode* FinalPathNode);
+
+	bool PathExist(FVector2D StartIndex);
 
 };

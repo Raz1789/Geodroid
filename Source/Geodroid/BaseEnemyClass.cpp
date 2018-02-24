@@ -162,7 +162,7 @@ void ABaseEnemyClass::UpdatePathList(FVector2D TargetNodeIndex)
 	Pathfinder = NewObject<UA_Pathfinding>();
 
 	//Update the PathTArray using the Get Path Function
-	PathList.Append(Pathfinder->CalculatePath(CurrentNode.NodeIndex, UMapClass::GetTargetNode().NodeIndex));
+	PathList.Append(Pathfinder->CalculatePath(CurrentNode.NodeIndex));
 
 	//Update the PathCounter to End of the PathTArray.
 	PathCounter = PathList.Num() - 2; /// -2 since the -1 is Current Node and Next Node is -2
@@ -252,22 +252,32 @@ void ABaseEnemyClass::DeathSequence(float DeltaTime)
 
 void ABaseEnemyClass::ShootAtPlayer()
 {
-	AGeodroidProjectile::BulletDamage = AttackDamage;
 	//Pointer Protection
 	if (!World) return;
 
+	//Checking if Enemy can fire
 	if (TimeFromLastFire > EnemyFireRate)
 	{
+		//Reset timer
 		TimeFromLastFire = 0.f;
+
 		// try and fire a projectile
 		if (UPointerProtection::CheckAndLog(ProjectileClass, "Enemy Projectile"))
 		{
-					//Set Spawn Collision Handling Override
-					FActorSpawnParameters ActorSpawnParams;
-					ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
-					// spawn the projectile at the muzzle
-					World->SpawnActor<AGeodroidProjectile>(ProjectileClass,( GetActorLocation() + (GetActorForwardVector() * 100.f)), this->GetActorRotation(), ActorSpawnParams);
+			AGeodroidProjectile* Projectile;
+
+			//Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+			// spawn the projectile at the muzzle
+			Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass, (GetActorLocation() + (GetActorForwardVector() * 100.f)), this->GetActorRotation(), ActorSpawnParams);
+
+			if (UPointerProtection::CheckAndLog(Projectile, "Enemy Projectile"))
+			{
+				Projectile->SetBulletDamage(AttackDamage);
+			}
 		}
 
 		// try and play the sound if specified

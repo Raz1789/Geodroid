@@ -1,14 +1,6 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "GeodroidCharacter.h"
-#include "Animation/AnimInstance.h"
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/InputComponent.h"
-#include "GameFramework/InputSettings.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
-#include "Kismet/GameplayStatics.h"
-#include "MotionControllerComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -85,6 +77,7 @@ AGeodroidCharacter::AGeodroidCharacter()
 	PlayerGold = 100;
 	PlayerMaxHealth = 100.f;
 	AttackDamage = 1.0f;
+	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
 
 	/***************** Setting the Component Collision function **********/
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
@@ -146,12 +139,18 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("TurnRate", this, &AGeodroidCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AGeodroidCharacter::LookUpAtRate);
+
+	//Place Turret
+	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::CheckFeasibilityForConstruction);
+	PlayerInputComponent->BindAction("PlaceStructure",IE_Released, this, &AGeodroidCharacter::BuildDefenseStructure);
+
+	//Select the Defense Structure
+	PlayerInputComponent->BindAction("SelectTurret", IE_Pressed, this, &AGeodroidCharacter::SelectTurretForConstruction);
+	PlayerInputComponent->BindAction("SelectTrap", IE_Pressed, this, &AGeodroidCharacter::SelectTrapForConstruction);
 }
 
 void AGeodroidCharacter::OnFire()
 {
-
-	AGeodroidProjectile::BulletDamage = AttackDamage;
 
 	// try and fire a projectile
 	if (ProjectileClass != NULL)
@@ -167,6 +166,8 @@ void AGeodroidCharacter::OnFire()
 			}
 			else
 			{
+				AGeodroidProjectile* Projectile;
+
 				const FRotator SpawnRotation = GetControlRotation();
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
@@ -176,7 +177,12 @@ void AGeodroidCharacter::OnFire()
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 				// spawn the projectile at the muzzle
-				World->SpawnActor<AGeodroidProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+				if (UPointerProtection::CheckAndLog(Projectile, "Player Projectile"))
+				{
+					Projectile->SetBulletDamage(AttackDamage);
+				}
 			}
 		}
 	}
@@ -326,6 +332,22 @@ bool AGeodroidCharacter::DeductStructureCost(int32 AmountToBeDeducted)
 	}
 
 	return bCanBeSubracted;
+}
+
+void AGeodroidCharacter::CheckFeasibilityForConstruction()
+{}
+
+void AGeodroidCharacter::BuildDefenseStructure()
+{}
+
+void AGeodroidCharacter::SelectTurretForConstruction()
+{
+	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
+}
+
+void AGeodroidCharacter::SelectTrapForConstruction()
+{
+	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Trap;
 }
 
 void AGeodroidCharacter::DebugFunction()

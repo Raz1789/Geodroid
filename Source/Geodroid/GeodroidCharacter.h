@@ -10,7 +10,23 @@
 #include "Engine/World.h"
 #include "NodeViewerActor.h"
 #include "GameFramework/Character.h"
+#include "Animation/AnimInstance.h"
+#include "PointerProtection.h"
+#include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/InputComponent.h"
+#include "GameFramework/InputSettings.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "MotionControllerComponent.h"
 #include "GeodroidCharacter.generated.h"
+
+UENUM()
+enum class ESelectDefenseStructure : uint8
+{
+	ESDS_Turret,
+	ESDS_Trap
+};
 
 class UInputComponent;
 
@@ -149,12 +165,31 @@ protected:
 	int32 PlayerGold;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
-		//Attack Damage per shot from the player
-		float AttackDamage;
+	//Attack Damage per shot from the player
+	float AttackDamage;
+
+	//bool to store if the Construction of Defense Structure feasible
+	bool bIsConstructionFeasible;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
+	//Defense structure that is selected
+	ESelectDefenseStructure SelectedDefenseStructure;
 
 	///**************** MEMBER FUNCTIONS ************************///
 	//Deducts the cost of structure from the Player and returns if it is possible to construct
 	bool DeductStructureCost(int32 AmountToBeReceived);
+
+	//Function to check feasibility of Construction of Defense Structure
+	void CheckFeasibilityForConstruction();
+
+	//Function to Construct the Defense Structure at desired location
+	void BuildDefenseStructure();
+
+	//Select Turret for Construction Action
+	void SelectTurretForConstruction();
+
+	//Select Trap for Construction Action
+	void SelectTrapForConstruction();
 
 public:
 	/** Returns Mesh1P subobject **/

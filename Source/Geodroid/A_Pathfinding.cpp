@@ -212,6 +212,9 @@ TArray<FVector2D> UA_Pathfinding::MakePathList(PathNode* FinalPathNode)
 	return OutputList;
 }
 
-
+bool UA_Pathfinding::PathExist(FVector2D StartIndex)
+{
+	return true;
+}
 
 #pragma endregion

@@ -90,7 +90,7 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 		{
 			TimeFromLastFire = 0.f;
 			// try and fire a projectile
-			if (UPointerProtection::CheckAndLog(ProjectileClass, "Turret Projectile"))
+			if (UPointerProtection::CheckAndLog(ProjectileClass, "Turret ProjectileClass"))
 			{
 				AGeodroidProjectile* Projectile;
 				//Set Spawn Collision Handling Override
@@ -111,13 +111,16 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 				FRotator SpawnRotation;
 				SpawnRotation = SpawnDirection.Rotation();
 
-				AGeodroidProjectile::BulletDamage = 5.0f;
-
 				// spawn the projectile at the muzzle
 				Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass,
 																	SpawnLocation,
 																	SpawnRotation,
 																	ActorSpawnParams);
+
+				if (UPointerProtection::CheckAndLog(Projectile, "Turret Projectile"))
+				{
+					Projectile->SetBulletDamage(AttackDamage);
+				}
 			}
 
 			// try and play the sound if specified

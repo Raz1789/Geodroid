@@ -21,7 +21,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	class UProjectileMovementComponent* ProjectileMovement;
 
-	//MEMBER VARIABLE
+	///MEMBER VARIABLE
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
+	//Specify the amount of damage the projectile should cause in blueprint
+	float BulletDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet Design")
+	//Specify the initial velocity the projectile will be fired at
+	float InitialVelocity;
 
 	///MEMEBER FUNCTIONS
 	//virtual void BeginPlay() override;
@@ -40,14 +47,10 @@ public:
 
 	///MEMBER VARIBALES
 
-	/** Projectile Design Variables **/
-	//Specify the amount of damage the projectile should cause in blueprint
-	static float BulletDamage;
-
-	//Specify the initial velocity the projectile will be fired at
-	static float InitialVelocity;
-
-	//Getter for the BulletDamage Variable;
+	//Getter for the BulletDamage Variable
 	float GetBulletDamage();
+
+	//Setter for the BulletDamage Variable
+	void SetBulletDamage(float _BulletDamage);
 };
 
