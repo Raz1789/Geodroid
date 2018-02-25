@@ -12,6 +12,7 @@ ADefenseStructures::ADefenseStructures()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	BP_BuildCost = 100;
+	bIsStructureActive = false;
 }
 
 // Called when the game starts or when spawned
@@ -36,5 +37,15 @@ void ADefenseStructures::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ADefenseStructures::ActivateTower()
+{
+	bIsStructureActive = true;
+}
+
+bool ADefenseStructures::IsStructureActive()
+{
+	return bIsStructureActive;
 }
 

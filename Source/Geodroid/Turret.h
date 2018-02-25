@@ -23,9 +23,9 @@ class GEODROID_API ATurret : public ADefenseStructures
 protected:
 	///***************** MEMBER VARIABLE *******************///
 	//CollisionShape for Sweeping for enemies
-	FCollisionShape InfluenceCircle;
+	FCollisionShape InfluenceBox;
 
-	//Array of Enemies inside the InfluenceCircle
+	//Array of Enemies inside the InfluenceBox
 	TArray<FHitResult> OutHits;
 
 	//The World Component
@@ -63,13 +63,14 @@ protected:
 		void ReceiveLookAtTargetEnemy(const AActor* TargetEnemy);
 
 	UFUNCTION()
-	//Check if the Enemy inside the InfluenceCircle is visible and take necessary action
+	//Check if the Enemy inside the InfluenceBox is visible and take necessary action
 	void CheckAndExecuteAttack();
 
 	UFUNCTION()
 		//Shoot at Enemy
 		void ShootAtEnemy(const  AActor* TargetEnemy);
-
+	UFUNCTION()
+		bool IsPlayerInVisibleRange(const  AActor* TargetEnemy);
 
 public:
 	///*************** CONSTRUCTOR *************************************///

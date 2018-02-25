@@ -55,7 +55,8 @@ protected:
 	//Stores the next Level Blueprint
 	TSubclassOf<ADefenseStructures> NextLevelStructureActor;
 
-
+	//Check if the DefenseStructure is Activated
+	bool bIsStructureActive;
 	
 	///**************************** MEMBER FUNCTIONS **********************************///
 	// Called when the game starts or when spawned
@@ -63,19 +64,26 @@ protected:
 
 public:
 
+	///*************************** MEMBER VARIABLE **********************************///
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
 	//Get the Building Cost from the Blueprint
 	int32 BP_BuildCost;
+
+	///************************** MEMBER FUNCTION **********************************///
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	//Activates the Tower
+	void ActivateTower();
+
+	//Getter for bIsStructureActive
+	bool IsStructureActive();
 
 	//Getter for BUILD_COST
 	static int32 GetBuildCost();
 
 	//Getter for NextLevelStructureActor
-	TSubclassOf<ADefenseStructures> GetNextLevelStructureActor();
-	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	
+	TSubclassOf<ADefenseStructures> GetNextLevelStructureActor();	
 	
 };

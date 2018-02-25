@@ -176,9 +176,11 @@ float ABaseEnemyClass::GetHealth()
 void ABaseEnemyClass::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
 {
 	AGeodroidProjectile* Collider = Cast<AGeodroidProjectile>(OtherActor);
-	if (Collider)
+	ABaseEnemyClass* ColliderInstigator = Cast<ABaseEnemyClass>(OtherActor->GetInstigator());
+
+	if (Collider && !ColliderInstigator)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Bullet Damage %f"), Collider->GetBulletDamage());
+		UE_LOG(LogTemp, Warning, TEXT("Bullet Damage %f"), Collider->GetBulletDamage()); //TODO REMOVE THIS
 		ApplyDamage(Collider->GetBulletDamage());
 	}
 }
@@ -269,10 +271,13 @@ void ABaseEnemyClass::ShootAtPlayer()
 
 			//Set Spawn Collision Handling Override
 			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			ActorSpawnParams.Instigator = this;
 
 			// spawn the projectile at the muzzle
-			Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass, (GetActorLocation() + (GetActorForwardVector() * 100.f)), this->GetActorRotation(), ActorSpawnParams);
+			Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass,
+																(GetActorLocation() + (GetActorForwardVector() * 100.f)),
+																this->GetActorRotation(), ActorSpawnParams);
 
 			if (UPointerProtection::CheckAndLog(Projectile, "Enemy Projectile"))
 			{

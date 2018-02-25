@@ -77,7 +77,11 @@ AGeodroidCharacter::AGeodroidCharacter()
 	PlayerGold = 100;
 	PlayerMaxHealth = 100.f;
 	AttackDamage = 1.0f;
+
+	///Defense Structure Related variable initialization
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
+	ConstructionStatus = EConstructionStatus::ECS_NoActivity;
+	bIsSiteInspectionNodeSet = false;
 
 	/***************** Setting the Component Collision function **********/
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
@@ -106,6 +110,26 @@ void AGeodroidCharacter::BeginPlay()
 
 
 	PlayerHealth = PlayerMaxHealth;
+}
+
+void AGeodroidCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	///DEFENSE TOWER CONSTRUCTION
+	switch (ConstructionStatus)
+	{
+	case EConstructionStatus::ECS_NoActivity:
+		break;
+	case EConstructionStatus::ECS_CheckingSite:
+		CheckFeasibilityForConstruction();
+		break;
+	case EConstructionStatus::ECS_Constructing:
+
+		ConstructionStatus = EConstructionStatus::ECS_NoActivity;
+		break;
+	}
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -141,8 +165,8 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AGeodroidCharacter::LookUpAtRate);
 
 	//Place Turret
-	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::CheckFeasibilityForConstruction);
-	PlayerInputComponent->BindAction("PlaceStructure",IE_Released, this, &AGeodroidCharacter::BuildDefenseStructure);
+	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::StartCheckingSite);
+	PlayerInputComponent->BindAction("PlaceStructure",IE_Released, this, &AGeodroidCharacter::StartStructureConstruction);
 
 	//Select the Defense Structure
 	PlayerInputComponent->BindAction("SelectTurret", IE_Pressed, this, &AGeodroidCharacter::SelectTurretForConstruction);
@@ -174,7 +198,8 @@ void AGeodroidCharacter::OnFire()
 
 				//Set Spawn Collision Handling Override
 				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				ActorSpawnParams.Instigator = this;
 
 				// spawn the projectile at the muzzle
 				Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
@@ -335,7 +360,31 @@ bool AGeodroidCharacter::DeductStructureCost(int32 AmountToBeDeducted)
 }
 
 void AGeodroidCharacter::CheckFeasibilityForConstruction()
-{}
+{
+
+	FHitResult OutHit;
+
+	//TODO Create a CancelAction button function
+	//TODO Create ConstructionReset function
+
+	///Set bIsConstructionFeasible = false;
+	bIsConstructionFeasible = false;
+	///Line Trace forward looking for Profile "Floor"
+		
+	///extract the FloorHitposition and do a pivot adjustment
+	///Convert the FloorPosition to MapNode
+	///Check if SiteInspectedNode is Set
+		///Check if the SiteInspectedNode NOT equals to FloorNode
+			///Check if FloorNode isWalkable
+				///Set FloorNode Walkable to false
+				///Check if PathExist if Structure placed
+					///Check if PreviousSpawnStructure Pointer is not null
+						///Destroy Previously Constructed DefenseStructure
+					///Set SiteInspectedNode = FloorNode
+					///Create New Structure and assign to PreviousSpawnedStructure;
+					///Set StructureColor to Green
+					///Set bIsConstructionFeasible = true;
+}
 
 void AGeodroidCharacter::BuildDefenseStructure()
 {}
@@ -348,6 +397,16 @@ void AGeodroidCharacter::SelectTurretForConstruction()
 void AGeodroidCharacter::SelectTrapForConstruction()
 {
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Trap;
+}
+
+void AGeodroidCharacter::StartCheckingSite()
+{
+	ConstructionStatus = EConstructionStatus::ECS_CheckingSite;
+}
+
+void AGeodroidCharacter::StartStructureConstruction()
+{
+	ConstructionStatus = EConstructionStatus::ECS_Constructing;
 }
 
 void AGeodroidCharacter::DebugFunction()
@@ -438,4 +497,49 @@ void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActo
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Player health: %f"), PlayerHealth);
+}
+
+bool AGeodroidCharacter::VisibilityCheck(const  AActor* TargetActor)
+{ /*
+	//Pointer Protection
+	UWorld* World = GetWorld(); //TODO Make All GetWorld Together
+	if (!World) return false;
+
+	FHitResult OutHit;
+
+	///Getting the spawn Location
+	FVector TargetLocation;
+
+	///Vector to Enemy = -TurretVector from origin + EnemyVector from Origin (Shoot Offset is not required for visibility check)
+	TargetLocation = -GetActorLocation() + TargetActor->GetActorLocation();
+	TargetLocation.Normalize(); ///To get the Direction Vector
+	FVector SpawnDirection = TargetLocation;
+	TargetLocation *= 100.f; ///Scale to get a point 50cm from the start of vector
+	TargetLocation += BP_Turret->GetComponentLocation(); ///Traslating the Vector to the Turret
+
+														///Getting SpawnRotation
+	FRotator SpawnRotation;
+	SpawnRotation = SpawnDirection.Rotation();
+
+	///Setting the CollisionQueryParams
+	FCollisionQueryParams CollisionParam;
+	CollisionParam.AddIgnoredActor(this);
+
+	World->LineTraceSingleByChannel(OutHit,
+									TargetLocation,
+									TargetLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
+									ECC_Visibility,
+									CollisionParam);
+	DrawDebugLine(World,
+				  TargetLocation,
+				  TargetLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
+				  FColor::Red,
+				  false);
+
+	if (OutHit.GetActor() == TargetEnemy)
+	{
+		return true;
+	}
+	*/
+	return false;
 }

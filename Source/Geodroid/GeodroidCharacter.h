@@ -13,6 +13,7 @@
 #include "Animation/AnimInstance.h"
 #include "PointerProtection.h"
 #include "Camera/CameraComponent.h"
+#include "DefenseStructures.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
@@ -26,6 +27,14 @@ enum class ESelectDefenseStructure : uint8
 {
 	ESDS_Turret,
 	ESDS_Trap
+};
+
+UENUM()
+enum class EConstructionStatus : uint8
+{
+	ECS_NoActivity,
+	ECS_CheckingSite,
+	ECS_Constructing
 };
 
 class UInputComponent;
@@ -168,14 +177,30 @@ protected:
 	//Attack Damage per shot from the player
 	float AttackDamage;
 
-	//bool to store if the Construction of Defense Structure feasible
-	bool bIsConstructionFeasible;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
 	//Defense structure that is selected
 	ESelectDefenseStructure SelectedDefenseStructure;
 
+	//Defense Structure Construction Status
+	EConstructionStatus ConstructionStatus;
+
+	///Temp Variable for construction purposes
+	//bool to store if the Construction of Defense Structure feasible
+	bool bIsConstructionFeasible;
+
+	//bool to check if the SiteInspectedNode is set
+	bool bIsSiteInspectionNodeSet;
+
+	//FVector2D Storing the Node under SiteInspection
+	FVector2D SiteInspectedNode;
+
+	//Spawned Defense Structure Pointer
+	ADefenseStructures* PreviousSpawnedStructure;
+
 	///**************** MEMBER FUNCTIONS ************************///
+	//Ticks every Frame
+	virtual void Tick(float DeltaTime) override;
+
 	//Deducts the cost of structure from the Player and returns if it is possible to construct
 	bool DeductStructureCost(int32 AmountToBeReceived);
 
@@ -190,6 +215,15 @@ protected:
 
 	//Select Trap for Construction Action
 	void SelectTrapForConstruction();
+
+	//Function to initialize Checking Site for the construction of Defense Structure
+	void StartCheckingSite();
+
+	//Function to initialize Construction of the Defense Structure
+	void StartStructureConstruction();
+
+	//Checks if the Actor provided is visible
+	bool VisibilityCheck(const  AActor* TargetActor);
 
 public:
 	/** Returns Mesh1P subobject **/

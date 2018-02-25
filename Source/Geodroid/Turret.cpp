@@ -10,11 +10,13 @@ ATurret::ATurret()
 	AttackRate = 1.f;
 	AttackDamage = 5.f;
 	CurrentLevelOfStructure = ELevel::Level1;
-	BuildLevelLimit = ELevel::Level2;
+	BuildLevelLimit = ELevel::Level3;
 
 	///Turret Influence Components
-	InfluenceCircle = FCollisionShape::MakeSphere(UMapClass::GetWorldNodeSize() * 2 * 1.4f);
+	float SphereRadius = UMapClass::GetWorldNodeSize() * 2 * 1.4f;
+	InfluenceBox = FCollisionShape::MakeSphere(SphereRadius);
 
+	///CollisionComponent
 	RestrictionArea = CreateDefaultSubobject<UBoxComponent>(TEXT("RestrictionArea"));
 	RestrictionArea->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
 	RestrictionArea->SetBoxExtent(FVector(200.f,200.f, 50.f));
@@ -42,8 +44,32 @@ void ATurret::BeginPlay()
 
 	if (!World) return;
 	
-	DrawDebugSphere(World, GetActorLocation(), InfluenceCircle.GetSphereRadius(), 25, FColor::Magenta, true);
+	DrawDebugSphere(World, GetActorLocation(), InfluenceBox.GetSphereRadius(), 25, FColor::Magenta, true);
 
+}
+
+void ATurret::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsStructureActive)
+	{
+		///Updating the Firetimer
+		TimeFromLastFire += DeltaTime;
+
+		///Clipping at random max prevent float overflow
+		if (TimeFromLastFire > AttackRate * 1000.f)
+		{
+			TimeFromLastFire = AttackRate + 1.f;
+		}
+
+		CheckAndExecuteAttack();
+	}
+	else
+	{
+		//TODO Remove at Production
+		UE_LOG(LogTemp, Warning, TEXT("Structure is not Activated"));
+	}
 }
 
 void ATurret::CheckAndExecuteAttack()
@@ -54,7 +80,7 @@ void ATurret::CheckAndExecuteAttack()
 	///******************** SETTING TURRET ROTATION *************************///
 	FCollisionObjectQueryParams ObjectParams;
 	ObjectParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);
-	if (World->SweepMultiByObjectType(OutHits, ActorLocation, ActorLocation, FQuat::Identity, ObjectParams, InfluenceCircle))
+	if (World->SweepMultiByObjectType(OutHits, ActorLocation, ActorLocation, FQuat::Identity, ObjectParams, InfluenceBox))
 	{
 		bool bIsTargetActorPresentInHitResult = false;
 		if (TargetActor)
@@ -77,7 +103,10 @@ void ATurret::CheckAndExecuteAttack()
 			TargetActor = OutHits[0].GetActor();
 		}
 		ReceiveLookAtTargetEnemy(TargetActor);
-		ShootAtEnemy(TargetActor);
+		if (IsPlayerInVisibleRange(TargetActor))
+		{
+			ShootAtEnemy(TargetActor);
+		}
 	}
 	
 }
@@ -93,9 +122,11 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 			if (UPointerProtection::CheckAndLog(ProjectileClass, "Turret ProjectileClass"))
 			{
 				AGeodroidProjectile* Projectile;
+				
 				//Set Spawn Collision Handling Override
 				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				ActorSpawnParams.Instigator = Instigator;
 
 				///Getting the spawn Location
 				FVector SpawnLocation;
@@ -104,7 +135,7 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 				SpawnLocation = -BP_Turret->GetComponentLocation() + (TargetActor->GetActorLocation() + /*OFFSET*/(TargetActor->GetActorForwardVector() * 100.f));
 				SpawnLocation.Normalize(); ///To get the Direction Vector
 				FVector SpawnDirection = SpawnLocation;
-				SpawnLocation *= 50.f; ///Scale to get a point 50cm from the start of vector
+				SpawnLocation *= 100.f; ///Scale to get a point 50cm from the start of vector
 				SpawnLocation += BP_Turret->GetComponentLocation(); ///Traslating the Vector to the Turret
 
 				///Getting SpawnRotation
@@ -132,17 +163,47 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 	}
 }
 
-void ATurret::Tick(float DeltaTime)
+bool ATurret::IsPlayerInVisibleRange(const  AActor* _TargetActor)
 {
-	Super::Tick(DeltaTime);	
-	///Updating the Firetimer
-	TimeFromLastFire += DeltaTime;
+	//Pointer Protection
+	if (!World) return false;
+	if (!BP_Turret) return false;
 
-	///Clipping at random max prevent float overflow
-	if (TimeFromLastFire > AttackRate * 1000.f)
+	FHitResult OutHit;
+
+	///Getting the spawn Location
+	FVector SpawnLocation;
+
+	///Vector to Enemy = -TurretVector from origin + EnemyVector from Origin (Shoot Offset is not required for visibility check)
+	SpawnLocation = -BP_Turret->GetComponentLocation() + _TargetActor->GetActorLocation();
+	SpawnLocation.Normalize(); ///To get the Direction Vector
+	FVector SpawnDirection = SpawnLocation;
+	SpawnLocation *= 100.f; ///Scale to get a point 50cm from the start of vector
+	SpawnLocation += BP_Turret->GetComponentLocation(); ///Traslating the Vector to the Turret
+
+	///Getting SpawnRotation
+	FRotator SpawnRotation;
+	SpawnRotation = SpawnDirection.Rotation();
+
+	///Setting the CollisionQueryParams
+	FCollisionQueryParams CollisionParam;
+	CollisionParam.AddIgnoredActor(this);
+
+	World->LineTraceSingleByChannel(OutHit,
+									SpawnLocation,
+									SpawnLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
+									ECC_Visibility,
+									CollisionParam);
+	DrawDebugLine(World,
+	SpawnLocation,
+	SpawnLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
+	FColor::Red,
+	false);
+
+	if (OutHit.GetActor() == _TargetActor)
 	{
-		TimeFromLastFire = AttackRate + 1.f;
-	}	
+		return true;
+	}
 
-	CheckAndExecuteAttack();
+	return false;
 }
