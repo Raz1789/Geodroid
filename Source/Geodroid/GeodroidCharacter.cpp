@@ -111,16 +111,14 @@ void AGeodroidCharacter::BeginPlay()
 		Mesh1P->SetHiddenInGame(false, true);
 	}
 
-
 	PlayerHealth = PlayerMaxHealth;
 
-	//Structure Construction Range is 2 squares diagonal length as default (can change from Blueprint)
-	StructureConstructionRange = UMapClass::GetWorldNodeSize() * 2 * 1.4f;
 
 	if (UPointerProtection::CheckAndLog(GetWorld(), "Player World Pointer"))
 	{
 		World = GetWorld();
 	}
+
 }
 
 void AGeodroidCharacter::Tick(float DeltaTime)
@@ -133,27 +131,31 @@ void AGeodroidCharacter::Tick(float DeltaTime)
 	switch (ConstructionStatus)
 	{
 	case EConstructionStatus::ECS_NoActivity:
+		CancelConstruction();
 		break;
 	case EConstructionStatus::ECS_CheckingSite:
 		CheckFeasibilityForConstruction();
 		break;
 	case EConstructionStatus::ECS_Constructing:
 		BuildDefenseStructure();
-		CancelConstruction();
 		break;
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	//DEBUG
+
+	//UE_LOG(LogTemp, Warning, TEXT("Node Walkable 13,0: %s"), *FString(UMapClass::IsMapNodeWalkable(13, 0) ? "true" : "false"));
 	FVector StartLocation;
 	FVector LookDirection;
 
 	GetCameraDetails(StartLocation, LookDirection);
 
-	FVector EndLocation = StartLocation + (LookDirection * 100);
-	
+	FVector EndLocation = StartLocation + (LookDirection * StructureConstructionRange);
+
 	DrawDebugLine(World,
 				  StartLocation,
 				  EndLocation,
-				  FColor::Magenta,
+				  FColor::Red,
 				  false);
 }
 
@@ -387,8 +389,6 @@ bool AGeodroidCharacter::DeductStructureCost(int32 AmountToBeDeducted)
 
 void AGeodroidCharacter::CheckFeasibilityForConstruction()
 {
-
-
 	///Pointer Protection
 	if (!World) return;
 
@@ -399,103 +399,100 @@ void AGeodroidCharacter::CheckFeasibilityForConstruction()
 	AActor* FloorActor;
 
 	FloorActor = FloorCheck();
-	bool bIsFloorVisible = VisibilityCheck(FloorActor);
 
 	if (FloorActor)
 	{
-		///extract the FloorHitposition and do a pivot adjustment
-		FVector FloorPosition = FloorActor->GetActorLocation() + FVector(-200.f, -200.f, 0.f);
-		///Convert the FloorPosition to MapNode
-		FVector2D FloorNodeIndex = UMapClass::WorldToMapNode(FloorPosition).NodeIndex;
-		///Check if FloorNode isWalkable
-		if (UMapClass::IsMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y))
-		{
-			///Check if SiteInspectedNode is Set
-			if (bIsSiteInspectedNodeSet)
-			{
-				///Check if the SiteInspectedNode NOT equals to FloorNode
-				if (SiteInspectedNode.X != FloorNodeIndex.X && SiteInspectedNode.Y != FloorNodeIndex.Y)
-				{
-					///Set FloorNode Walkable to false
-					UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
-					///Check if PathExist if Structure placed
-				//	UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
-					if (NewObject<UA_Pathfinding>()->PathExist(FloorNodeIndex))		//TODO: check if required to change
-					{
-						///Check if PreviousSpawnStructure Pointer is not null
-						if (PreviousSpawnedStructure)
-						{
-							///Destroy Previously Constructed DefenseStructure
-							World->DestroyActor(PreviousSpawnedStructure);
-						}
-						///Set SiteInspectedNode = FloorNode
-						SiteInspectedNode = FloorNodeIndex;
-						///Create New Structure and assign to PreviousSpawnedStructure;
-						if (DefenseStructuresClasses.Num() > (uint8)(SelectedDefenseStructure)) //Check if DefenseStructure Class element at checking location exist
-						{
-							//Set Spawn Collision Handling Override
-							FActorSpawnParameters ActorSpawnParams;
-							ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-							ActorSpawnParams.Instigator = this;
+		bool bIsFloorVisible = VisibilityCheck(FloorActor);
 
-							// spawn the projectile at the muzzle
-							PreviousSpawnedStructure = World->SpawnActor<ADefenseStructures>(
-								DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
-								FloorPosition,
-								FRotator::ZeroRotator,
-								ActorSpawnParams);
-						}
-						///Set StructureColor to Green
-						PreviousSpawnedStructure->MaterialColor = FColor(0.f, 1.f, 0.f, 0.5f);
-						///Set bIsConstructionFeasible = true;
-						bIsConstructionFeasible = true;
+		if (bIsFloorVisible)
+		{
+			///extract the FloorHitposition and do a pivot adjustment
+			FVector FloorPosition = FloorActor->GetActorLocation() + FVector(200.f, 200.f, 0.f);
+			///Convert the FloorPosition to MapNode
+			FVector2D FloorNodeIndex = UMapClass::WorldToMapNode(FloorPosition).NodeIndex;
+			///Check if FloorNode isWalkable
+			bool bIsFloorNodeWalkable = UMapClass::IsMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y);
+			if (bIsFloorNodeWalkable)
+			{
+				///Check if SiteInspectedNode is Set
+				if (bIsSiteInspectedNodeSet)
+				{
+					///Check if the SiteInspectedNode NOT equals to FloorNode
+					if (SiteInspectedNode.X != FloorNodeIndex.X && SiteInspectedNode.Y != FloorNodeIndex.Y)
+					{
+						///Set Old Location Walkable to true
+						UMapClass::SetMapNodeWalkable(SiteInspectedNode.X, SiteInspectedNode.Y, true);
+						SpawnDummyTurret(FloorNodeIndex, FloorPosition);
 					}
 				}
-			}
-			else
-			{
-				///Set FloorNode Walkable to false
-				UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
-				///Check if PathExist if Structure placed
-				//	UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
-				if (NewObject<UA_Pathfinding>()->PathExist(FloorNodeIndex))		//TODO: check if required to change
+				else
 				{
-					///Check if PreviousSpawnStructure Pointer is not null
-					if (PreviousSpawnedStructure)
-					{
-						///Destroy Previously Constructed DefenseStructure
-						World->DestroyActor(PreviousSpawnedStructure);
-					}
-					///Set SiteInspectedNode = FloorNode
-					SiteInspectedNode = FloorNodeIndex;
-					bIsSiteInspectedNodeSet = true;
-					///Create New Structure and assign to PreviousSpawnedStructure;
-					if (DefenseStructuresClasses.Num() > (uint8)(SelectedDefenseStructure)) //Check if DefenseStructure Class element at checking location exist
-					{
-						//Set Spawn Collision Handling Override
-						FActorSpawnParameters ActorSpawnParams;
-						ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-						ActorSpawnParams.Instigator = this;
-
-						// spawn the projectile at the muzzle
-						PreviousSpawnedStructure = World->SpawnActor<ADefenseStructures>(
-							DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
-							FloorPosition,
-							FRotator::ZeroRotator,
-							ActorSpawnParams);
-					}
-					///Set StructureColor to Green
-					PreviousSpawnedStructure->MaterialColor = FColor(0.f, 1.f, 0.f, 0.5f);
-					///Set bIsConstructionFeasible = true;
-					bIsConstructionFeasible = true;
+					SpawnDummyTurret(FloorNodeIndex, FloorPosition);
 				}
 			}
 		}
 	}
 }
 
+void AGeodroidCharacter::SpawnDummyTurret(FVector2D &FloorNodeIndex, FVector &FloorPosition)
+{
+
+	///Set FloorNode Walkable to false
+	UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
+	///Check if PathExist if Structure placed
+	UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
+	bool bIsPathAvailable = Pathfinding->PathExist(FloorNodeIndex);
+	if (bIsPathAvailable)		//TODO: check if required to change
+	{
+		///Check if PreviousSpawnStructure Pointer is not null
+		if (PreviousSpawnedStructure)
+		{
+			///Destroy Previously Constructed DefenseStructure
+			World->DestroyActor(PreviousSpawnedStructure);
+		}
+		///Set SiteInspectedNode = FloorNode
+		SiteInspectedNode = FloorNodeIndex;
+		bIsSiteInspectedNodeSet = true;
+		///Create New Structure and assign to PreviousSpawnedStructure;
+		if (DefenseStructuresClasses.Num() > (uint8)(SelectedDefenseStructure)) //Check if DefenseStructure Class element at checking location exist
+		{
+			//Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			ActorSpawnParams.Instigator = this;
+
+			// spawn the projectile at the muzzle
+			PreviousSpawnedStructure = World->SpawnActor<ADefenseStructures>(
+				DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
+				FloorPosition,
+				FRotator::ZeroRotator,
+				ActorSpawnParams);
+		}
+		///Set StructureColor to Green
+		PreviousSpawnedStructure->MaterialColor = FColor::Green;
+		///Set bIsConstructionFeasible = true;
+		bIsConstructionFeasible = true;
+	}
+	else
+	{
+		///Set FloorNode Walkable to false
+		UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
+	}
+
+}
+
 void AGeodroidCharacter::BuildDefenseStructure()
-{}
+{
+	if (bIsConstructionFeasible)
+	{
+		PreviousSpawnedStructure->ActivateTower();
+		DefenseStructuesSpawnList.Add(PreviousSpawnedStructure);
+		PreviousSpawnedStructure->MaterialColor = FColor::Silver;
+		PreviousSpawnedStructure = nullptr;
+		bIsConstructionFeasible = false;
+		ConstructionStatus = EConstructionStatus::ECS_NoActivity;
+	}
+}
 
 void AGeodroidCharacter::CancelConstruction()
 {
@@ -512,6 +509,7 @@ void AGeodroidCharacter::CancelConstruction()
 
 		if (PreviousSpawnedStructure)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Destroyed"));
 			World->DestroyActor(PreviousSpawnedStructure);
 		}
 	}
@@ -662,7 +660,7 @@ AActor* AGeodroidCharacter::FloorCheck()
 
 	FVector EndLocation = StartLocation + (LookDirection * StructureConstructionRange);
 
-	UE_LOG(LogTemp, Warning, TEXT("------------------------\nStart: %s, \nLookDirection: %s, \nEndLocation: %s \n--------------------------"), *StartLocation.ToString(), *LookDirection.ToString(), *EndLocation.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("------------------------\nStart: %s, \nLookDirection: %s, \nEndLocation: %s \n--------------------------"), *StartLocation.ToString(), *LookDirection.ToString(), *EndLocation.ToString());
 
 	///Setting the CollisionQueryParams
 	FCollisionQueryParams CollisionParam;
@@ -673,7 +671,7 @@ AActor* AGeodroidCharacter::FloorCheck()
 	World->LineTraceSingleByChannel(OutHit,
 									StartLocation,
 									EndLocation,
-									ECollisionChannel::ECC_GameTraceChannel1, ///Channel pertaining to Floor
+									ECollisionChannel::ECC_GameTraceChannel2, ///Channel pertaining to Floor
 									CollisionParam);
 	DrawDebugLine(World,
 				  StartLocation,
@@ -684,9 +682,8 @@ AActor* AGeodroidCharacter::FloorCheck()
 	return OutHit.GetActor();
 }
 
-void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector OutCameraLookDirection)
+void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector& OutCameraLookDirection)
 {
-
 	//Getting PlayerController
 	APlayerController* PlayerController;
 
@@ -699,26 +696,7 @@ void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector Ou
 		return;
 	}
 
-	//Getting the CrossHair ScreenLocation
-	int32 ViewportSizeX, ViewportSizeY;
-	PlayerController->GetViewportSize(ViewportSizeX, ViewportSizeY);
-
-	FVector2D CrossHairScreenLocation;
-	CrossHairScreenLocation.X = ViewportSizeX * CrossHairLocation.X;
-	CrossHairScreenLocation.Y = ViewportSizeY * CrossHairLocation.Y;
-
-	FVector CameraWorldLocation;
-	FVector CameraLookDirection;
-
-	//DeprojectScreenPositionToWorld
-	PlayerController->DeprojectScreenPositionToWorld(
-		CrossHairScreenLocation.X,
-		CrossHairScreenLocation.Y,
-		CameraWorldLocation,
-		CameraLookDirection
-	);
-
 	//Returning the Details
-	OutCameraLocation = CameraWorldLocation;
-	OutCameraLookDirection = CameraLookDirection;
+	OutCameraLocation = PlayerController->PlayerCameraManager->GetCameraLocation();
+	OutCameraLookDirection = PlayerController->PlayerCameraManager->GetCameraRotation().Vector();
 }

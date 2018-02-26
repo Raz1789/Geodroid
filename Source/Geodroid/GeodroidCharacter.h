@@ -210,9 +210,12 @@ protected:
 	//Spawned Defense Structure Pointer
 	ADefenseStructures* PreviousSpawnedStructure;
 
-	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+	UPROPERTY(EditDefaultsOnly, Category = "Game Design | StructureConstruction")
 	//TArray containing all the Defense Structures
 	TArray<TSubclassOf<class ADefenseStructures>> DefenseStructuresClasses;
+
+	//TArray containing all the Defense Structures
+	TArray<ADefenseStructures*> DefenseStructuesSpawnList;
 
 	///**************** MEMBER FUNCTIONS ************************///
 	//Ticks every Frame
@@ -223,6 +226,9 @@ protected:
 
 	//Function to check feasibility of Construction of Defense Structure
 	void CheckFeasibilityForConstruction();
+
+	//SubFunction of CheckFeasibilityForConstruction
+	void SpawnDummyTurret(FVector2D &FloorNodeIndex, FVector &FloorPosition);
 
 	//Function to Construct the Defense Structure at desired location
 	void BuildDefenseStructure();
@@ -249,7 +255,7 @@ protected:
 	AActor* FloorCheck();
 
 	//Get the Camera Location and LookDirection
-	void GetCameraDetails(FVector& OutCameraLocation, FVector OutCameraLookDirection);
+	void GetCameraDetails(FVector& OutCameraLocation, FVector& OutCameraLookDirection);
 
 public:
 	/** Returns Mesh1P subobject **/
@@ -263,7 +269,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "debug")
 	TSubclassOf<ANodeViewerActor> NodeViewerClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
 	float PlayerMaxHealth;
 
 	//Function used to add resources from the Enemies

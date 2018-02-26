@@ -63,11 +63,11 @@ void ATurret::Tick(float DeltaTime)
 
 		CheckAndExecuteAttack();
 	}
-	else
-	{
-		//TODO Remove at Production
-		UE_LOG(LogTemp, Warning, TEXT("Structure is not Activated"));
-	}
+	//else
+	//{
+	//	//TODO Remove at Production
+	//	UE_LOG(LogTemp, Warning, TEXT("Structure is not Activated"));
+	//}
 }
 
 void ATurret::CheckAndExecuteAttack()

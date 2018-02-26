@@ -247,8 +247,21 @@ bool UA_Pathfinding::PathExist(FVector2D StartIndex)
 
 	bool bPathExist = false;
 
+	for (FVector2D& Node : NeighbourList)
+	{
+		FVector2D CheckingNode = StartIndex + Node;
+		bool IsCheckNodeWalkable = UMapClass::IsMapNodeWalkable(CheckingNode.X, CheckingNode.Y);
+		if (IsCheckNodeWalkable && CheckBoundary(CheckingNode))
+		{
+			bool bIsPathAvailable = CalculatePathList(OutPathList, CheckingNode);
+			if (!bIsPathAvailable)
+			{
+				return false;
+			}
+		}
+	}
 
-	return CalculatePathList(OutPathList, StartIndex);
+	return true;
 }
 
 #pragma endregion
