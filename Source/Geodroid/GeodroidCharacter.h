@@ -11,6 +11,7 @@
 #include "NodeViewerActor.h"
 #include "A_Pathfinding.h"
 #include "GameFramework/Character.h"
+#include "GeodroidHUD.h"
 #include "Animation/AnimInstance.h"
 #include "PointerProtection.h"
 #include "Camera/CameraComponent.h"
@@ -174,6 +175,15 @@ protected:
 	//World pointer
 	UWorld* World;
 
+	//The PlayerController
+	APlayerController* PlayerController;
+
+	//The Player HUD
+	AGeodroidHUD* PlayerHUD;
+
+	//The Node in which the character is standing
+	FMapNode CharacterMapNode;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
 	//Amount of gold player has.
 	int32 PlayerGold;
@@ -201,15 +211,6 @@ protected:
 	//bool to store if the Construction of Defense Structure feasible
 	bool bIsConstructionFeasible;
 
-	//bool to check if the SiteInspectedNode is set
-	bool bIsSiteInspectedNodeSet;
-
-	//FVector2D Storing the Node under SiteInspection
-	FVector2D SiteInspectedNode;
-
-	//Spawned Defense Structure Pointer
-	ADefenseStructures* PreviousSpawnedStructure;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Game Design | StructureConstruction")
 	//TArray containing all the Defense Structures
 	TArray<TSubclassOf<class ADefenseStructures>> DefenseStructuresClasses;
@@ -225,16 +226,16 @@ protected:
 	bool DeductStructureCost(int32 AmountToBeReceived);
 
 	//Function to check feasibility of Construction of Defense Structure
-	void CheckFeasibilityForConstruction();
+	void StructurePlacement();
 
-	//SubFunction of CheckFeasibilityForConstruction
-	void SpawnDummyTurret(FVector2D &FloorNodeIndex, FVector &FloorPosition);
+	//SubFunction of StructurePlacement
+	void SpawnStructure(FVector2D &FloorNodeIndex, FVector &FloorPosition);
 
 	//Function to Construct the Defense Structure at desired location
 	void BuildDefenseStructure();
 
-	//CancelConstruction
-	void CancelConstruction();
+	//DestroyStructure
+	void DestroyStructure(ADefenseStructures* Structure);
 
 	//Select Turret for Construction Action
 	void SelectTurretForConstruction();
@@ -246,7 +247,7 @@ protected:
 	void StartCheckingSite();
 
 	//Set SelectDefenseStructure variable to StructureConstruction Status
-	void StartStructureConstruction();
+	void DestroyInit();
 
 	//Checks if the Actor provided is visible
 	bool VisibilityCheck(const  AActor* TargetActor);

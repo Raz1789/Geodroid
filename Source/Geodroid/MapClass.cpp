@@ -142,7 +142,7 @@ void UMapClass::SetMapNodeWalkable(int32 X, int32 Y, bool _bWalkable)
 {
 	bMapNodeStatusChanged = true;
 	Map[IndexFrom1DTo2D(X, Y, MapMaxSize)].bWalkable = _bWalkable;
-	MapWalkableExtractor();
+	MapWalkableArray[IndexFrom1DTo2D(X, Y, MapMaxSize)] = _bWalkable;
 }
 
 bool UMapClass::IsDebugOn()
@@ -157,7 +157,6 @@ bool UMapClass::IsMapNodeStatusChanged()
 
 TArray<bool> UMapClass::GetMapWalkableArray()
 {
-	MapWalkableExtractor();
 	return MapWalkableArray;
 }
 

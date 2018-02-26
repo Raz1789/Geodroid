@@ -83,7 +83,6 @@ AGeodroidCharacter::AGeodroidCharacter()
 	///Defense Structure Related variable initialization
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
 	ConstructionStatus = EConstructionStatus::ECS_NoActivity;
-	bIsSiteInspectedNodeSet = false;
 	StructureConstructionRange = 1200.f;
 
 	/***************** Setting the Component Collision function **********/
@@ -119,6 +118,21 @@ void AGeodroidCharacter::BeginPlay()
 		World = GetWorld();
 	}
 
+	if (UPointerProtection::CheckAndLog(Cast<APlayerController>(GetController()), TEXT("Player Controller")))
+	{
+		PlayerController = Cast<APlayerController>(GetController());
+	}
+	
+	if (PlayerController && UPointerProtection::CheckAndLog(Cast<AGeodroidHUD>(PlayerController->GetHUD()), TEXT("Player Controller")))
+	{
+		PlayerHUD = Cast<AGeodroidHUD>(PlayerController->GetHUD());
+	}
+
+	if (PlayerHUD)
+	{
+		PlayerHUD->ReceivePopUpMessage("I'm Alive (for 3 seconds)");
+	}
+
 }
 
 void AGeodroidCharacter::Tick(float DeltaTime)
@@ -128,18 +142,20 @@ void AGeodroidCharacter::Tick(float DeltaTime)
 	if (!World) return; //TODO Remove only for debug
 	///DEFENSE TOWER CONSTRUCTION
 
-	switch (ConstructionStatus)
-	{
-	case EConstructionStatus::ECS_NoActivity:
-		CancelConstruction();
-		break;
-	case EConstructionStatus::ECS_CheckingSite:
-		CheckFeasibilityForConstruction();
-		break;
-	case EConstructionStatus::ECS_Constructing:
-		BuildDefenseStructure();
-		break;
-	}
+	//CharacterMapNode = UMapClass::WorldToMapNode(GetActorLocation());
+	//
+	//switch (ConstructionStatus)
+	//{
+	//case EConstructionStatus::ECS_NoActivity:
+	//	DestroyStructure();
+	//	break;
+	//case EConstructionStatus::ECS_CheckingSite:
+	//	StructurePlacement();
+	//	break;
+	//case EConstructionStatus::ECS_Constructing:
+	//	BuildDefenseStructure();
+	//	break;
+	//}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	//DEBUG
@@ -196,9 +212,8 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	//Defense Structure Related Inputs
 	PlayerInputComponent->BindAction("SelectTurret", IE_Pressed, this, &AGeodroidCharacter::SelectTurretForConstruction);
 	PlayerInputComponent->BindAction("SelectTrap", IE_Pressed, this, &AGeodroidCharacter::SelectTrapForConstruction);
-	PlayerInputComponent->BindAction("CancelConstruction", IE_Pressed, this, &AGeodroidCharacter::CancelConstruction);
-	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::StartCheckingSite);
-	PlayerInputComponent->BindAction("PlaceStructure", IE_Released, this, &AGeodroidCharacter::StartStructureConstruction);
+	PlayerInputComponent->BindAction("DestroyStructure", IE_Pressed, this, &AGeodroidCharacter::DestroyInit);
+	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::StructurePlacement);
 }
 
 void AGeodroidCharacter::OnFire()
@@ -387,7 +402,7 @@ bool AGeodroidCharacter::DeductStructureCost(int32 AmountToBeDeducted)
 	return bCanBeSubracted;
 }
 
-void AGeodroidCharacter::CheckFeasibilityForConstruction()
+void AGeodroidCharacter::StructurePlacement()
 {
 	///Pointer Protection
 	if (!World) return;
@@ -414,104 +429,109 @@ void AGeodroidCharacter::CheckFeasibilityForConstruction()
 			bool bIsFloorNodeWalkable = UMapClass::IsMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y);
 			if (bIsFloorNodeWalkable)
 			{
-				///Check if SiteInspectedNode is Set
-				if (bIsSiteInspectedNodeSet)
+				///Checking that character is not on the SpawnLocation
+				if (CharacterMapNode.NodeIndex.X != FloorNodeIndex.X && CharacterMapNode.NodeIndex.Y != FloorNodeIndex.Y)
 				{
-					///Check if the SiteInspectedNode NOT equals to FloorNode
-					if (SiteInspectedNode.X != FloorNodeIndex.X && SiteInspectedNode.Y != FloorNodeIndex.Y)
+					///Set FloorNode Walkable to false
+					UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
+					///Check if PathExist if Structure placed
+					UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
+					bool bIsPathAvailable = Pathfinding->PathExist(FloorNodeIndex);
+
+					if (bIsPathAvailable)
 					{
-						///Set Old Location Walkable to true
-						UMapClass::SetMapNodeWalkable(SiteInspectedNode.X, SiteInspectedNode.Y, true);
-						SpawnDummyTurret(FloorNodeIndex, FloorPosition);
+						///Spawn the Structure
+						SpawnStructure(FloorNodeIndex, FloorPosition);
+					}
+					else
+					{
+						PlayerHUD->ReceivePopUpMessage("You will block the path if you construct here");
+						///Set FloorNode Walkable to false
+						UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
 					}
 				}
 				else
 				{
-					SpawnDummyTurret(FloorNodeIndex, FloorPosition);
+					PlayerHUD->ReceivePopUpMessage("You are standing on the Construction Location");
 				}
 			}
+			else
+			{
+				PlayerHUD->ReceivePopUpMessage("That is not a walkable node");
+			}
 		}
-	}
-}
-
-void AGeodroidCharacter::SpawnDummyTurret(FVector2D &FloorNodeIndex, FVector &FloorPosition)
-{
-
-	///Set FloorNode Walkable to false
-	UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
-	///Check if PathExist if Structure placed
-	UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
-	bool bIsPathAvailable = Pathfinding->PathExist(FloorNodeIndex);
-	if (bIsPathAvailable)		//TODO: check if required to change
-	{
-		///Check if PreviousSpawnStructure Pointer is not null
-		if (PreviousSpawnedStructure)
+		else
 		{
-			///Destroy Previously Constructed DefenseStructure
-			World->DestroyActor(PreviousSpawnedStructure);
+			PlayerHUD->ReceivePopUpMessage("Floor is not visible");
 		}
-		///Set SiteInspectedNode = FloorNode
-		SiteInspectedNode = FloorNodeIndex;
-		bIsSiteInspectedNodeSet = true;
-		///Create New Structure and assign to PreviousSpawnedStructure;
-		if (DefenseStructuresClasses.Num() > (uint8)(SelectedDefenseStructure)) //Check if DefenseStructure Class element at checking location exist
-		{
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-			ActorSpawnParams.Instigator = this;
-
-			// spawn the projectile at the muzzle
-			PreviousSpawnedStructure = World->SpawnActor<ADefenseStructures>(
-				DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
-				FloorPosition,
-				FRotator::ZeroRotator,
-				ActorSpawnParams);
-		}
-		///Set StructureColor to Green
-		PreviousSpawnedStructure->MaterialColor = FColor::Green;
-		///Set bIsConstructionFeasible = true;
-		bIsConstructionFeasible = true;
 	}
 	else
 	{
-		///Set FloorNode Walkable to false
-		UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
+		PlayerHUD->ReceivePopUpMessage("Structure should be placed on the floor");
 	}
 
+	if (bIsConstructionFeasible)
+	{
+		PlayerHUD->ReceivePopUpMessage("Structure constructed!!!");
+	}
+
+}
+
+void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &FloorPosition)
+{
+	///Create New Structure and assign to SpawnedStructure;
+	if (DefenseStructuresClasses.Num() > (uint8)(SelectedDefenseStructure)) //Check if DefenseStructure Class element at checking location exist
+	{
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		ActorSpawnParams.Instigator = this;
+
+		DefenseStructuesSpawnList.Add(World->SpawnActor<ADefenseStructures>(
+			DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
+			FloorPosition,
+			FRotator::ZeroRotator,
+			ActorSpawnParams));
+		if (DefenseStructuesSpawnList[DefenseStructuesSpawnList.Num()-1])
+		{
+			DefenseStructuesSpawnList[DefenseStructuesSpawnList.Num() - 1]->ActivateTower();
+			DefenseStructuesSpawnList[DefenseStructuesSpawnList.Num() - 1]->MaterialColor = FColor::Silver;
+			///Set bIsConstructionFeasible = true;
+			bIsConstructionFeasible = true;
+			for (auto& Spawn : DefenseStructuesSpawnList)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Spawn: %s"), *Spawn->GetName());
+			}
+		}
+		else
+		{
+			PlayerHUD->ReceivePopUpMessage("Structure cannot be constructed there due to collision!!!");
+			///Set FloorNode Walkable back to true
+			UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
+			bIsConstructionFeasible = false;
+		}
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Classes for Defense Structure not added"));
+	}
+	
 }
 
 void AGeodroidCharacter::BuildDefenseStructure()
 {
-	if (bIsConstructionFeasible)
-	{
-		PreviousSpawnedStructure->ActivateTower();
-		DefenseStructuesSpawnList.Add(PreviousSpawnedStructure);
-		PreviousSpawnedStructure->MaterialColor = FColor::Silver;
-		PreviousSpawnedStructure = nullptr;
-		bIsConstructionFeasible = false;
-		ConstructionStatus = EConstructionStatus::ECS_NoActivity;
-	}
+	
 }
 
-void AGeodroidCharacter::CancelConstruction()
+void AGeodroidCharacter::DestroyStructure(ADefenseStructures* Structure)
 {
 	if (!World) return;
 
-	ConstructionStatus = EConstructionStatus::ECS_NoActivity;
-
-	if (bIsSiteInspectedNodeSet)
+	if (Structure)
 	{
-		bIsSiteInspectedNodeSet = false;
-		bIsConstructionFeasible = false;
-
-		ConstructionStatus = EConstructionStatus::ECS_NoActivity;
-
-		if (PreviousSpawnedStructure)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Destroyed"));
-			World->DestroyActor(PreviousSpawnedStructure);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Destroyed"));
+		World->DestroyActor(Structure);
 	}
 }
 
@@ -530,9 +550,9 @@ void AGeodroidCharacter::StartCheckingSite()
 	ConstructionStatus = EConstructionStatus::ECS_CheckingSite;
 }
 
-void AGeodroidCharacter::StartStructureConstruction()
+void AGeodroidCharacter::DestroyInit()
 {
-	ConstructionStatus = EConstructionStatus::ECS_Constructing;
+
 }
 
 void AGeodroidCharacter::DebugFunction()
@@ -684,18 +704,9 @@ AActor* AGeodroidCharacter::FloorCheck()
 
 void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector& OutCameraLookDirection)
 {
-	//Getting PlayerController
-	APlayerController* PlayerController;
-
-	if (UPointerProtection::CheckAndLog(Cast<APlayerController>(GetController()), TEXT("Player Controller")))
-	{
-		PlayerController = Cast<APlayerController>(GetController());
-	}
-	else
-	{
-		return;
-	}
-
+	//Pointer Protection
+	if (!PlayerController) return;
+	
 	//Returning the Details
 	OutCameraLocation = PlayerController->PlayerCameraManager->GetCameraLocation();
 	OutCameraLookDirection = PlayerController->PlayerCameraManager->GetCameraRotation().Vector();

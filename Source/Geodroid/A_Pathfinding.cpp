@@ -71,6 +71,8 @@ UA_Pathfinding::UA_Pathfinding()
 	NeighbourList.Add(FVector2D(0, -1));
 	NeighbourList.Add(FVector2D(1, 0));
 	NeighbourList.Add(FVector2D(0, 1));
+
+	MapMaxSize = FVector2D(15.f, 7.f);
 }
 
 TArray<FVector2D> UA_Pathfinding::GetPathList(FVector2D StartIndex,	FVector2D EndIndex)
@@ -220,10 +222,12 @@ bool UA_Pathfinding::CalculatePathList(TArray<FVector2D>& OutPathList, const FVe
 
 bool UA_Pathfinding::CheckBoundary(FVector2D &TempVector) const
 {
-	return TempVector.X >= 0 &&
+	bool bIsNodeInsideMap = TempVector.X >= 0 &&
 		TempVector.X < MapMaxSize.X &&
 		TempVector.Y >= 0 &&
 		TempVector.Y < MapMaxSize.Y;
+	UE_LOG(LogTemp, Warning, TEXT(""));
+	return bIsNodeInsideMap;
 }
 
 TArray<FVector2D> UA_Pathfinding::MakePathList(PathNode* FinalPathNode)
@@ -250,13 +254,18 @@ bool UA_Pathfinding::PathExist(FVector2D StartIndex)
 	for (FVector2D& Node : NeighbourList)
 	{
 		FVector2D CheckingNode = StartIndex + Node;
-		bool IsCheckNodeWalkable = UMapClass::IsMapNodeWalkable(CheckingNode.X, CheckingNode.Y);
-		if (IsCheckNodeWalkable && CheckBoundary(CheckingNode))
+		bool bIsNodeInsideMap = CheckBoundary(CheckingNode);
+		UE_LOG(LogTemp, Warning, TEXT(""));
+		if (bIsNodeInsideMap)
 		{
-			bool bIsPathAvailable = CalculatePathList(OutPathList, CheckingNode);
-			if (!bIsPathAvailable)
+			bool IsCheckNodeWalkable = UMapClass::IsMapNodeWalkable(CheckingNode.X, CheckingNode.Y);
+			if (IsCheckNodeWalkable)
 			{
-				return false;
+				bool bIsPathAvailable = CalculatePathList(OutPathList, CheckingNode);
+				if (!bIsPathAvailable)
+				{
+					return false;
+				}
 			}
 		}
 	}
