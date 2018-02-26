@@ -69,6 +69,10 @@ public:
 	//Get the Building Cost from the Blueprint
 	int32 BP_BuildCost;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item Design")
+	//Color of Material
+	FColor MaterialColor;
+
 	///************************** MEMBER FUNCTION **********************************///
 
 	// Called every frame

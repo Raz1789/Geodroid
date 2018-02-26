@@ -81,10 +81,6 @@ public:
 	//Influence Circle radius value for Game Design Purposes
 	float InfluenceCircleRadius;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret Design")
-	//Color of Material
-	FColor MaterialColor;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 	//Inner Collision Box representing the Turret Area Restriction
 	UBoxComponent* RestrictionArea;

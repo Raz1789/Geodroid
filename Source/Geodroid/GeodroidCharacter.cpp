@@ -77,11 +77,14 @@ AGeodroidCharacter::AGeodroidCharacter()
 	PlayerGold = 100;
 	PlayerMaxHealth = 100.f;
 	AttackDamage = 1.0f;
+	CrossHairLocation = FVector2D(0.5f, 0.5f);
+	PrimaryActorTick.bCanEverTick = true;
 
 	///Defense Structure Related variable initialization
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
 	ConstructionStatus = EConstructionStatus::ECS_NoActivity;
-	bIsSiteInspectionNodeSet = false;
+	bIsSiteInspectedNodeSet = false;
+	StructureConstructionRange = 1200.f;
 
 	/***************** Setting the Component Collision function **********/
 	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
@@ -110,13 +113,23 @@ void AGeodroidCharacter::BeginPlay()
 
 
 	PlayerHealth = PlayerMaxHealth;
+
+	//Structure Construction Range is 2 squares diagonal length as default (can change from Blueprint)
+	StructureConstructionRange = UMapClass::GetWorldNodeSize() * 2 * 1.4f;
+
+	if (UPointerProtection::CheckAndLog(GetWorld(), "Player World Pointer"))
+	{
+		World = GetWorld();
+	}
 }
 
 void AGeodroidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!World) return; //TODO Remove only for debug
 	///DEFENSE TOWER CONSTRUCTION
+
 	switch (ConstructionStatus)
 	{
 	case EConstructionStatus::ECS_NoActivity:
@@ -125,12 +138,26 @@ void AGeodroidCharacter::Tick(float DeltaTime)
 		CheckFeasibilityForConstruction();
 		break;
 	case EConstructionStatus::ECS_Constructing:
-
-		ConstructionStatus = EConstructionStatus::ECS_NoActivity;
+		BuildDefenseStructure();
+		CancelConstruction();
 		break;
 	}
 
+	FVector StartLocation;
+	FVector LookDirection;
+
+	GetCameraDetails(StartLocation, LookDirection);
+
+	FVector EndLocation = StartLocation + (LookDirection * 100);
+	
+	DrawDebugLine(World,
+				  StartLocation,
+				  EndLocation,
+				  FColor::Magenta,
+				  false);
 }
+
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -163,57 +190,50 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("TurnRate", this, &AGeodroidCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AGeodroidCharacter::LookUpAtRate);
-
-	//Place Turret
-	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::StartCheckingSite);
-	PlayerInputComponent->BindAction("PlaceStructure",IE_Released, this, &AGeodroidCharacter::StartStructureConstruction);
-
-	//Select the Defense Structure
+	
+	//Defense Structure Related Inputs
 	PlayerInputComponent->BindAction("SelectTurret", IE_Pressed, this, &AGeodroidCharacter::SelectTurretForConstruction);
 	PlayerInputComponent->BindAction("SelectTrap", IE_Pressed, this, &AGeodroidCharacter::SelectTrapForConstruction);
+	PlayerInputComponent->BindAction("CancelConstruction", IE_Pressed, this, &AGeodroidCharacter::CancelConstruction);
+	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::StartCheckingSite);
+	PlayerInputComponent->BindAction("PlaceStructure", IE_Released, this, &AGeodroidCharacter::StartStructureConstruction);
 }
 
 void AGeodroidCharacter::OnFire()
 {
+	//Pointer Protection
+	if (!World) return;
 
 	// try and fire a projectile
-	if (ProjectileClass != NULL)
+	if (UPointerProtection::CheckAndLog(ProjectileClass, "Player Projectile Class"))
 	{
-		UWorld* const World = GetWorld();
-		if (World != NULL)
+		if (bUsingMotionControllers)
 		{
-			if (bUsingMotionControllers)
+			const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
+			const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
+			World->SpawnActor<AGeodroidProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+		}
+		else
+		{
+			AGeodroidProjectile* Projectile;
+
+			const FRotator SpawnRotation = GetControlRotation();
+			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+			const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+
+			//Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+			ActorSpawnParams.Instigator = this;
+
+			// spawn the projectile at the muzzle
+			Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+			if (UPointerProtection::CheckAndLog(Projectile, "Player Projectile"))
 			{
-				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
-				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
-				World->SpawnActor<AGeodroidProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-			}
-			else
-			{
-				AGeodroidProjectile* Projectile;
-
-				const FRotator SpawnRotation = GetControlRotation();
-				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				ActorSpawnParams.Instigator = this;
-
-				// spawn the projectile at the muzzle
-				Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-
-				if (UPointerProtection::CheckAndLog(Projectile, "Player Projectile"))
-				{
-					Projectile->SetBulletDamage(AttackDamage);
-				}
+				Projectile->SetBulletDamage(AttackDamage);
 			}
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("ProjectileClass is null"));
 	}
 
 	// try and play the sound if specified
@@ -322,14 +342,20 @@ void AGeodroidCharacter::MoveRight(float Value)
 
 void AGeodroidCharacter::TurnAtRate(float Rate)
 {
+	//Pointer Protection
+	if (!World) return;
+
 	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	AddControllerYawInput(Rate * BaseTurnRate * World->GetDeltaSeconds());
 }
 
 void AGeodroidCharacter::LookUpAtRate(float Rate)
 {
+	//Pointer Protection
+	if (!World) return;
+	
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	AddControllerPitchInput(Rate * BaseLookUpRate * World->GetDeltaSeconds());
 }
 
 bool AGeodroidCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInputComponent)
@@ -362,32 +388,134 @@ bool AGeodroidCharacter::DeductStructureCost(int32 AmountToBeDeducted)
 void AGeodroidCharacter::CheckFeasibilityForConstruction()
 {
 
-	FHitResult OutHit;
 
-	//TODO Create a CancelAction button function
-	//TODO Create ConstructionReset function
+	///Pointer Protection
+	if (!World) return;
 
 	///Set bIsConstructionFeasible = false;
 	bIsConstructionFeasible = false;
+
 	///Line Trace forward looking for Profile "Floor"
-		
-	///extract the FloorHitposition and do a pivot adjustment
-	///Convert the FloorPosition to MapNode
-	///Check if SiteInspectedNode is Set
-		///Check if the SiteInspectedNode NOT equals to FloorNode
-			///Check if FloorNode isWalkable
+	AActor* FloorActor;
+
+	FloorActor = FloorCheck();
+	bool bIsFloorVisible = VisibilityCheck(FloorActor);
+
+	if (FloorActor)
+	{
+		///extract the FloorHitposition and do a pivot adjustment
+		FVector FloorPosition = FloorActor->GetActorLocation() + FVector(-200.f, -200.f, 0.f);
+		///Convert the FloorPosition to MapNode
+		FVector2D FloorNodeIndex = UMapClass::WorldToMapNode(FloorPosition).NodeIndex;
+		///Check if FloorNode isWalkable
+		if (UMapClass::IsMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y))
+		{
+			///Check if SiteInspectedNode is Set
+			if (bIsSiteInspectedNodeSet)
+			{
+				///Check if the SiteInspectedNode NOT equals to FloorNode
+				if (SiteInspectedNode.X != FloorNodeIndex.X && SiteInspectedNode.Y != FloorNodeIndex.Y)
+				{
+					///Set FloorNode Walkable to false
+					UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
+					///Check if PathExist if Structure placed
+				//	UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
+					if (NewObject<UA_Pathfinding>()->PathExist(FloorNodeIndex))		//TODO: check if required to change
+					{
+						///Check if PreviousSpawnStructure Pointer is not null
+						if (PreviousSpawnedStructure)
+						{
+							///Destroy Previously Constructed DefenseStructure
+							World->DestroyActor(PreviousSpawnedStructure);
+						}
+						///Set SiteInspectedNode = FloorNode
+						SiteInspectedNode = FloorNodeIndex;
+						///Create New Structure and assign to PreviousSpawnedStructure;
+						if (DefenseStructuresClasses.Num() > (uint8)(SelectedDefenseStructure)) //Check if DefenseStructure Class element at checking location exist
+						{
+							//Set Spawn Collision Handling Override
+							FActorSpawnParameters ActorSpawnParams;
+							ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+							ActorSpawnParams.Instigator = this;
+
+							// spawn the projectile at the muzzle
+							PreviousSpawnedStructure = World->SpawnActor<ADefenseStructures>(
+								DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
+								FloorPosition,
+								FRotator::ZeroRotator,
+								ActorSpawnParams);
+						}
+						///Set StructureColor to Green
+						PreviousSpawnedStructure->MaterialColor = FColor(0.f, 1.f, 0.f, 0.5f);
+						///Set bIsConstructionFeasible = true;
+						bIsConstructionFeasible = true;
+					}
+				}
+			}
+			else
+			{
 				///Set FloorNode Walkable to false
+				UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
 				///Check if PathExist if Structure placed
+				//	UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
+				if (NewObject<UA_Pathfinding>()->PathExist(FloorNodeIndex))		//TODO: check if required to change
+				{
 					///Check if PreviousSpawnStructure Pointer is not null
+					if (PreviousSpawnedStructure)
+					{
 						///Destroy Previously Constructed DefenseStructure
+						World->DestroyActor(PreviousSpawnedStructure);
+					}
 					///Set SiteInspectedNode = FloorNode
+					SiteInspectedNode = FloorNodeIndex;
+					bIsSiteInspectedNodeSet = true;
 					///Create New Structure and assign to PreviousSpawnedStructure;
+					if (DefenseStructuresClasses.Num() > (uint8)(SelectedDefenseStructure)) //Check if DefenseStructure Class element at checking location exist
+					{
+						//Set Spawn Collision Handling Override
+						FActorSpawnParameters ActorSpawnParams;
+						ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+						ActorSpawnParams.Instigator = this;
+
+						// spawn the projectile at the muzzle
+						PreviousSpawnedStructure = World->SpawnActor<ADefenseStructures>(
+							DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
+							FloorPosition,
+							FRotator::ZeroRotator,
+							ActorSpawnParams);
+					}
 					///Set StructureColor to Green
+					PreviousSpawnedStructure->MaterialColor = FColor(0.f, 1.f, 0.f, 0.5f);
 					///Set bIsConstructionFeasible = true;
+					bIsConstructionFeasible = true;
+				}
+			}
+		}
+	}
 }
 
 void AGeodroidCharacter::BuildDefenseStructure()
 {}
+
+void AGeodroidCharacter::CancelConstruction()
+{
+	if (!World) return;
+
+	ConstructionStatus = EConstructionStatus::ECS_NoActivity;
+
+	if (bIsSiteInspectedNodeSet)
+	{
+		bIsSiteInspectedNodeSet = false;
+		bIsConstructionFeasible = false;
+
+		ConstructionStatus = EConstructionStatus::ECS_NoActivity;
+
+		if (PreviousSpawnedStructure)
+		{
+			World->DestroyActor(PreviousSpawnedStructure);
+		}
+	}
+}
 
 void AGeodroidCharacter::SelectTurretForConstruction()
 {
@@ -411,37 +539,28 @@ void AGeodroidCharacter::StartStructureConstruction()
 
 void AGeodroidCharacter::DebugFunction()
 {
-	if (NodeViewerClass != NULL)
-	{
-		UWorld* const World = GetWorld();
-		if(World != NULL)
-		{
-			//Get the Map's Max Size
-			FVector2D MapMaxSize = UMapClass::GetMapMaxSize();
-			//Iterate through each Node
-			for (int32 X = 0; X < MapMaxSize.X; X++)
-			{
-				for (int32 Y = 0; Y < MapMaxSize.Y; Y++)
-				{
-					//Ask Gamemode for the position of the Node
-					FVector position = UMapClass::GetMapNodePosition(X, Y);
-					position.Z = 100.f;
+	//Pointer Protection
+	if (!World) return;
 
-					//Spawn the actor at that location
-					FActorSpawnParameters SpawnParams;
-					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-					ANodeViewerActor* NodeViewer = World->SpawnActor<ANodeViewerActor>(NodeViewerClass, position, FRotator(0.f), SpawnParams);
-				}
+	if (UPointerProtection::CheckAndLog(NodeViewerClass, "NodeViewerClass"))
+	{
+		//Get the Map's Max Size
+		FVector2D MapMaxSize = UMapClass::GetMapMaxSize();
+		//Iterate through each Node
+		for (int32 X = 0; X < MapMaxSize.X; X++)
+		{
+			for (int32 Y = 0; Y < MapMaxSize.Y; Y++)
+			{
+				//Ask Gamemode for the position of the Node
+				FVector position = UMapClass::GetMapNodePosition(X, Y);
+				position.Z = 100.f;
+
+				//Spawn the actor at that location
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				ANodeViewerActor* NodeViewer = World->SpawnActor<ANodeViewerActor>(NodeViewerClass, position, FRotator(0.f), SpawnParams);
 			}
 		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("GetWorld not initialized"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("NodeViewer Class not initialized"));
 	}
 }
 
@@ -500,46 +619,106 @@ void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActo
 }
 
 bool AGeodroidCharacter::VisibilityCheck(const  AActor* TargetActor)
-{ /*
+{ 
 	//Pointer Protection
-	UWorld* World = GetWorld(); //TODO Make All GetWorld Together
-	if (!World) return false;
+	if (!World) return nullptr;
 
-	FHitResult OutHit;
+	FVector StartLocation;
+	FVector LookDirection;
 
-	///Getting the spawn Location
-	FVector TargetLocation;
+	GetCameraDetails(StartLocation, LookDirection);
 
-	///Vector to Enemy = -TurretVector from origin + EnemyVector from Origin (Shoot Offset is not required for visibility check)
-	TargetLocation = -GetActorLocation() + TargetActor->GetActorLocation();
-	TargetLocation.Normalize(); ///To get the Direction Vector
-	FVector SpawnDirection = TargetLocation;
-	TargetLocation *= 100.f; ///Scale to get a point 50cm from the start of vector
-	TargetLocation += BP_Turret->GetComponentLocation(); ///Traslating the Vector to the Turret
-
-														///Getting SpawnRotation
-	FRotator SpawnRotation;
-	SpawnRotation = SpawnDirection.Rotation();
+	FVector EndLocation = StartLocation + (LookDirection * StructureConstructionRange);
 
 	///Setting the CollisionQueryParams
 	FCollisionQueryParams CollisionParam;
 	CollisionParam.AddIgnoredActor(this);
 
-	World->LineTraceSingleByChannel(OutHit,
-									TargetLocation,
-									TargetLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
-									ECC_Visibility,
-									CollisionParam);
-	DrawDebugLine(World,
-				  TargetLocation,
-				  TargetLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
-				  FColor::Red,
-				  false);
+	FHitResult OutHit;
 
-	if (OutHit.GetActor() == TargetEnemy)
+	World->LineTraceSingleByChannel(OutHit,
+									StartLocation,
+									EndLocation,
+									ECollisionChannel::ECC_Visibility, ///Channel pertaining to Floor
+									CollisionParam);
+
+	if (OutHit.GetActor() == TargetActor)
 	{
 		return true;
 	}
-	*/
+
 	return false;
+}
+
+AActor* AGeodroidCharacter::FloorCheck()
+{
+	//Pointer Protection
+	if (!World) return nullptr;
+
+	FVector StartLocation;
+	FVector LookDirection;
+	
+	GetCameraDetails(StartLocation, LookDirection);
+
+	FVector EndLocation = StartLocation + (LookDirection * StructureConstructionRange);
+
+	UE_LOG(LogTemp, Warning, TEXT("------------------------\nStart: %s, \nLookDirection: %s, \nEndLocation: %s \n--------------------------"), *StartLocation.ToString(), *LookDirection.ToString(), *EndLocation.ToString());
+
+	///Setting the CollisionQueryParams
+	FCollisionQueryParams CollisionParam;
+	CollisionParam.AddIgnoredActor(this);
+
+	FHitResult OutHit;
+
+	World->LineTraceSingleByChannel(OutHit,
+									StartLocation,
+									EndLocation,
+									ECollisionChannel::ECC_GameTraceChannel1, ///Channel pertaining to Floor
+									CollisionParam);
+	DrawDebugLine(World,
+				  StartLocation,
+				  EndLocation,
+				  FColor::Green,
+				  false);
+
+	return OutHit.GetActor();
+}
+
+void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector OutCameraLookDirection)
+{
+
+	//Getting PlayerController
+	APlayerController* PlayerController;
+
+	if (UPointerProtection::CheckAndLog(Cast<APlayerController>(GetController()), TEXT("Player Controller")))
+	{
+		PlayerController = Cast<APlayerController>(GetController());
+	}
+	else
+	{
+		return;
+	}
+
+	//Getting the CrossHair ScreenLocation
+	int32 ViewportSizeX, ViewportSizeY;
+	PlayerController->GetViewportSize(ViewportSizeX, ViewportSizeY);
+
+	FVector2D CrossHairScreenLocation;
+	CrossHairScreenLocation.X = ViewportSizeX * CrossHairLocation.X;
+	CrossHairScreenLocation.Y = ViewportSizeY * CrossHairLocation.Y;
+
+	FVector CameraWorldLocation;
+	FVector CameraLookDirection;
+
+	//DeprojectScreenPositionToWorld
+	PlayerController->DeprojectScreenPositionToWorld(
+		CrossHairScreenLocation.X,
+		CrossHairScreenLocation.Y,
+		CameraWorldLocation,
+		CameraLookDirection
+	);
+
+	//Returning the Details
+	OutCameraLocation = CameraWorldLocation;
+	OutCameraLookDirection = CameraLookDirection;
 }

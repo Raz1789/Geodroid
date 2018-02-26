@@ -44,6 +44,15 @@ private:
 	//List of index subtractors for finding the neighbours
 	TArray<FVector2D> NeighbourList;
 
+	///************************ MEMBER FUNCTION **********************///
+	bool CalculatePathList(TArray<FVector2D>& OutPathList, const FVector2D& StartIndex, const FVector2D& EndIndex = UMapClass::GetTargetNode().NodeIndex, bool bIsThisACheckOnly = true);
+
+	bool CheckBoundary(FVector2D &TempVector) const;
+
+	//Make PathList from the PathNode LinkedList
+	TArray<FVector2D> MakePathList(PathNode* FinalPathNode);
+	//TODO check if change from public to private has caused any issues
+
 public:
 
 	//Constructor for UA_Pathfinding
@@ -51,13 +60,6 @@ public:
 
 	//Calculate the Path
 	TArray<FVector2D> GetPathList(FVector2D StartIndex, FVector2D EndIndex = UMapClass::GetTargetNode().NodeIndex);
-
-	bool CalculatePathList(TArray<FVector2D>& OutPathList, const FVector2D& StartIndex, const FVector2D& EndIndex = UMapClass::GetTargetNode().NodeIndex, bool bIsThisACheckOnly = true);
-
-	bool CheckBoundary(FVector2D &TempVector) const;
-
-	//Make PathList from the PathNode LinkedList
-	TArray<FVector2D> MakePathList(PathNode* FinalPathNode);
 
 	bool PathExist(FVector2D StartIndex);
 

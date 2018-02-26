@@ -25,7 +25,7 @@ ATurret::ATurret()
 	RootComponent = RestrictionArea;
 
 	///Turret Color
-	MaterialColor = FColor(1.f, 0.f, 0.f, 0.25f);
+	MaterialColor = FColor(1.f, 0.f, 0.f, 0.5f);
 
 }
 
@@ -44,8 +44,6 @@ void ATurret::BeginPlay()
 
 	if (!World) return;
 	
-	DrawDebugSphere(World, GetActorLocation(), InfluenceBox.GetSphereRadius(), 25, FColor::Magenta, true);
-
 }
 
 void ATurret::Tick(float DeltaTime)
@@ -163,7 +161,7 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 	}
 }
 
-bool ATurret::IsPlayerInVisibleRange(const  AActor* _TargetActor)
+bool ATurret::IsPlayerInVisibleRange(const  AActor* _TargetActor) //TODO Not tested after TargetEnemy changed to _TargetActor
 {
 	//Pointer Protection
 	if (!World) return false;
@@ -180,10 +178,6 @@ bool ATurret::IsPlayerInVisibleRange(const  AActor* _TargetActor)
 	FVector SpawnDirection = SpawnLocation;
 	SpawnLocation *= 100.f; ///Scale to get a point 50cm from the start of vector
 	SpawnLocation += BP_Turret->GetComponentLocation(); ///Traslating the Vector to the Turret
-
-	///Getting SpawnRotation
-	FRotator SpawnRotation;
-	SpawnRotation = SpawnDirection.Rotation();
 
 	///Setting the CollisionQueryParams
 	FCollisionQueryParams CollisionParam;

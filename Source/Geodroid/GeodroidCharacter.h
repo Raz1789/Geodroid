@@ -9,6 +9,7 @@
 #include "MapClass.h"
 #include "Engine/World.h"
 #include "NodeViewerActor.h"
+#include "A_Pathfinding.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimInstance.h"
 #include "PointerProtection.h"
@@ -18,6 +19,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 #include "GeodroidCharacter.generated.h"
@@ -25,8 +27,8 @@
 UENUM()
 enum class ESelectDefenseStructure : uint8
 {
-	ESDS_Turret,
-	ESDS_Trap
+	ESDS_Turret = 0,
+	ESDS_Trap = 1
 };
 
 UENUM()
@@ -112,7 +114,7 @@ public:
 	uint32 bUsingMotionControllers : 1;
 
 protected:
-	
+
 	/** Fires a projectile. */
 	void OnFire();
 
@@ -169,33 +171,48 @@ protected:
 	//Is player Dead
 	bool bIsPlayerDead;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
+	//World pointer
+	UWorld* World;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
 	//Amount of gold player has.
 	int32 PlayerGold;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
 	//Attack Damage per shot from the player
 	float AttackDamage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
 	//Defense structure that is selected
 	ESelectDefenseStructure SelectedDefenseStructure;
 
 	//Defense Structure Construction Status
 	EConstructionStatus ConstructionStatus;
 
-	///Temp Variable for construction purposes
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
+	//Structure Construction range
+	float StructureConstructionRange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
+	//CrossHair Location in Range 0 - 1 : Default (0.5,0.5)
+	FVector2D CrossHairLocation;
+
+	///Variable for construction purposes
 	//bool to store if the Construction of Defense Structure feasible
 	bool bIsConstructionFeasible;
 
 	//bool to check if the SiteInspectedNode is set
-	bool bIsSiteInspectionNodeSet;
+	bool bIsSiteInspectedNodeSet;
 
 	//FVector2D Storing the Node under SiteInspection
 	FVector2D SiteInspectedNode;
 
 	//Spawned Defense Structure Pointer
 	ADefenseStructures* PreviousSpawnedStructure;
+
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
+	//TArray containing all the Defense Structures
+	TArray<TSubclassOf<class ADefenseStructures>> DefenseStructuresClasses;
 
 	///**************** MEMBER FUNCTIONS ************************///
 	//Ticks every Frame
@@ -210,20 +227,29 @@ protected:
 	//Function to Construct the Defense Structure at desired location
 	void BuildDefenseStructure();
 
+	//CancelConstruction
+	void CancelConstruction();
+
 	//Select Turret for Construction Action
 	void SelectTurretForConstruction();
 
 	//Select Trap for Construction Action
 	void SelectTrapForConstruction();
 
-	//Function to initialize Checking Site for the construction of Defense Structure
+	//Set SelectDefenseStructure variable to CheckingSite Status
 	void StartCheckingSite();
 
-	//Function to initialize Construction of the Defense Structure
+	//Set SelectDefenseStructure variable to StructureConstruction Status
 	void StartStructureConstruction();
 
 	//Checks if the Actor provided is visible
 	bool VisibilityCheck(const  AActor* TargetActor);
+
+	//Checks if the Actor provided is floor
+	AActor* FloorCheck();
+
+	//Get the Camera Location and LookDirection
+	void GetCameraDetails(FVector& OutCameraLocation, FVector OutCameraLookDirection);
 
 public:
 	/** Returns Mesh1P subobject **/
