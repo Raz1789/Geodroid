@@ -23,6 +23,7 @@ FMapNode UMapClass::TargetNode;
 
 void UMapClass::Init(TArray<FVector2D> _MapDesignWalkableArray, float _WorldNodeSize, FVector2D _TargetNode, FVector2D _MapMaxSize)
 {
+	MapDesignWalkableArray.Empty();
 	MapDesignWalkableArray.Append(_MapDesignWalkableArray);
 
 	WorldNodeSize = _WorldNodeSize;
@@ -173,6 +174,11 @@ FMapNode UMapClass::GetTargetNode()
 float UMapClass::GetWorldNodeSize()
 {
 	return WorldNodeSize;
+}
+
+void UMapClass::ResetMapNodeChangeStatus()
+{
+	bMapNodeStatusChanged = false;
 }
 
 void UMapClass::MapWalkableExtractor()

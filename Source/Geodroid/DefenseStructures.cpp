@@ -1,8 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "DefenseStructures.h"
-///************* STATIC VARIABLE DECLARATION **************************///
-int32 ADefenseStructures::BuildCost;
 
 ///************** MEMBER FUNCTIONS *************************///
 
@@ -19,12 +17,18 @@ ADefenseStructures::ADefenseStructures()
 void ADefenseStructures::BeginPlay()
 {
 	Super::BeginPlay();
-	BuildCost = BP_BuildCost;
+	StructureMapNode = UMapClass::WorldToMapNode(GetActorLocation());
+	UE_LOG(LogTemp, Warning, TEXT("Node: %s"), *StructureMapNode.NodeIndex.ToString());
 }
 
 int32 ADefenseStructures::GetBuildCost()
 {
-	return BuildCost;
+	return BP_BuildCost;
+}
+
+FVector2D ADefenseStructures::GetStructureMapNodeIndex()
+{
+	return StructureMapNode.NodeIndex;
 }
 
 TSubclassOf<ADefenseStructures> ADefenseStructures::GetNextLevelStructureActor()

@@ -58,6 +58,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
 		static float GetWorldNodeSize();
 
+	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
+		static void ResetMapNodeChangeStatus();
+
 private:
 	///MEMBER VARIABLES ****************************************************************
 

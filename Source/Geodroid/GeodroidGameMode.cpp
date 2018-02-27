@@ -51,7 +51,7 @@ AGeodroidGameMode::AGeodroidGameMode()
 
 	NodeWorldSize = 400.f;
 	MapMaxSize = FVector2D(15.f, 7.f);
-	StartNode = FVector2D(0.f, 0.f);
+	StartNode = FVector2D(1.f, 0.f);
 	TargetNode = FVector2D(10.f, 5.f);
 
 	///ENEMY DESIGN VARIABLES
@@ -95,6 +95,17 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 		SpawnEnemy(0);
 		//Increment PawnCounter
 		PawnCounter++;
+	}
+	if (UMapClass::IsMapNodeStatusChanged())
+	{
+		if (EnemyList.Num() > 0)
+		{
+			for (auto& Enemy : EnemyList)
+			{
+				Enemy->UpdatePathList();
+			}
+		}
+		UMapClass::ResetMapNodeChangeStatus();
 	}
 }
 

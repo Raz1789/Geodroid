@@ -82,12 +82,8 @@ AGeodroidCharacter::AGeodroidCharacter()
 
 	///Defense Structure Related variable initialization
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
-	ConstructionStatus = EConstructionStatus::ECS_NoActivity;
 	StructureConstructionRange = 1200.f;
-
-	/***************** Setting the Component Collision function **********/
-	GetCapsuleComponent()->SetNotifyRigidBodyCollision(true);
-	GetCapsuleComponent()->OnComponentHit.AddDynamic(this, &AGeodroidCharacter::OnHit);
+	
 }
 
 void AGeodroidCharacter::BeginPlay()
@@ -128,51 +124,13 @@ void AGeodroidCharacter::BeginPlay()
 		PlayerHUD = Cast<AGeodroidHUD>(PlayerController->GetHUD());
 	}
 
-	if (PlayerHUD)
-	{
-		PlayerHUD->ReceivePopUpMessage("I'm Alive (for 3 seconds)");
-	}
+	
 
 }
 
 void AGeodroidCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (!World) return; //TODO Remove only for debug
-	///DEFENSE TOWER CONSTRUCTION
-
-	//CharacterMapNode = UMapClass::WorldToMapNode(GetActorLocation());
-	//
-	//switch (ConstructionStatus)
-	//{
-	//case EConstructionStatus::ECS_NoActivity:
-	//	DestroyStructure();
-	//	break;
-	//case EConstructionStatus::ECS_CheckingSite:
-	//	StructurePlacement();
-	//	break;
-	//case EConstructionStatus::ECS_Constructing:
-	//	BuildDefenseStructure();
-	//	break;
-	//}
-
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	//DEBUG
-
-	//UE_LOG(LogTemp, Warning, TEXT("Node Walkable 13,0: %s"), *FString(UMapClass::IsMapNodeWalkable(13, 0) ? "true" : "false"));
-	FVector StartLocation;
-	FVector LookDirection;
-
-	GetCameraDetails(StartLocation, LookDirection);
-
-	FVector EndLocation = StartLocation + (LookDirection * StructureConstructionRange);
-
-	DrawDebugLine(World,
-				  StartLocation,
-				  EndLocation,
-				  FColor::Red,
-				  false);
 }
 
 
@@ -390,18 +348,6 @@ bool AGeodroidCharacter::EnableTouchscreenMovement(class UInputComponent* Player
 	return false;
 }
 
-bool AGeodroidCharacter::DeductStructureCost(int32 AmountToBeDeducted)
-{
-	bool bCanBeSubracted = (PlayerGold > AmountToBeDeducted);
-
-	if (bCanBeSubracted)
-	{
-		PlayerGold -= AmountToBeDeducted;
-	}
-
-	return bCanBeSubracted;
-}
-
 void AGeodroidCharacter::StructurePlacement()
 {
 	///Pointer Protection
@@ -492,23 +438,37 @@ void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &Floo
 			FloorPosition,
 			FRotator::ZeroRotator,
 			ActorSpawnParams));
-		if (DefenseStructuesSpawnList[DefenseStructuesSpawnList.Num()-1])
+
+		ADefenseStructures* TempDefenseStructurePointer = DefenseStructuesSpawnList[DefenseStructuesSpawnList.Num() - 1];
+
+		int32 BuildCost = TempDefenseStructurePointer->GetBuildCost();
+
+		UE_LOG(LogTemp, Warning, TEXT("Building Cost: %d"), BuildCost);
+		if (SubtractGold(BuildCost))
 		{
-			DefenseStructuesSpawnList[DefenseStructuesSpawnList.Num() - 1]->ActivateTower();
-			DefenseStructuesSpawnList[DefenseStructuesSpawnList.Num() - 1]->MaterialColor = FColor::Silver;
-			///Set bIsConstructionFeasible = true;
-			bIsConstructionFeasible = true;
-			for (auto& Spawn : DefenseStructuesSpawnList)
+			if (TempDefenseStructurePointer)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Spawn: %s"), *Spawn->GetName());
+				TempDefenseStructurePointer->ActivateTower();
+				bIsConstructionFeasible = true;
+			}
+			else
+			{
+				PlayerHUD->ReceivePopUpMessage("Structure cannot be constructed there due to collision!!!");
+				///Set FloorNode Walkable back to true
+				UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
+				bIsConstructionFeasible = false;
 			}
 		}
 		else
 		{
-			PlayerHUD->ReceivePopUpMessage("Structure cannot be constructed there due to collision!!!");
-			///Set FloorNode Walkable back to true
+			PlayerHUD->ReceivePopUpMessage("You do not have sufficient Gold!!! Hint: Kill More enemies :P");
 			UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
-			bIsConstructionFeasible = false;
+			if (TempDefenseStructurePointer)
+			{
+				World->DestroyActor(TempDefenseStructurePointer);
+				DefenseStructuesSpawnList.RemoveAt(DefenseStructuesSpawnList.Num() - 1);
+			}
+			
 		}
 
 	}
@@ -519,18 +479,22 @@ void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &Floo
 	
 }
 
-void AGeodroidCharacter::BuildDefenseStructure()
-{
-	
-}
-
 void AGeodroidCharacter::DestroyStructure(ADefenseStructures* Structure)
 {
+	//Pointer Protection
 	if (!World) return;
+	if (!PlayerHUD) return;
 
 	if (Structure)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Destroyed"));
+		int32 GoldReimbursed = Structure->GetBuildCost() * 0.75f;
+		AddGold(GoldReimbursed);
+		FString Message = "You got back " + FString::FromInt(GoldReimbursed) + "Gold";
+		PlayerHUD->ReceivePopUpMessage(Message);
+		FVector2D StructureMapnodeIndex = Structure->GetStructureMapNodeIndex();
+		UMapClass::SetMapNodeWalkable(StructureMapnodeIndex.X,
+									  StructureMapnodeIndex.Y,
+									  true);
 		World->DestroyActor(Structure);
 	}
 }
@@ -545,13 +509,18 @@ void AGeodroidCharacter::SelectTrapForConstruction()
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Trap;
 }
 
-void AGeodroidCharacter::StartCheckingSite()
-{
-	ConstructionStatus = EConstructionStatus::ECS_CheckingSite;
-}
-
 void AGeodroidCharacter::DestroyInit()
 {
+	//TODO: Need to give some money back
+	AActor* TempActor = LineTraceForward();
+	if (TempActor)
+	{
+		ADefenseStructures* Structure = Cast<ADefenseStructures>(TempActor);
+		if (Structure)
+		{
+			DestroyStructure(Structure);
+		}
+	}
 
 }
 
@@ -632,8 +601,6 @@ void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActo
 	{
 		ApplyDamage(Collider->GetBulletDamage());
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Player health: %f"), PlayerHealth);
 }
 
 bool AGeodroidCharacter::VisibilityCheck(const  AActor* TargetActor)
@@ -666,6 +633,33 @@ bool AGeodroidCharacter::VisibilityCheck(const  AActor* TargetActor)
 	}
 
 	return false;
+}
+
+AActor * AGeodroidCharacter::LineTraceForward()
+{
+	//Pointer Protection
+	if (!World) return nullptr;
+
+	FVector StartLocation;
+	FVector LookDirection;
+
+	GetCameraDetails(StartLocation, LookDirection);
+
+	FVector EndLocation = StartLocation + (LookDirection * StructureConstructionRange);
+
+	///Setting the CollisionQueryParams
+	FCollisionQueryParams CollisionParam;
+	CollisionParam.AddIgnoredActor(this);
+
+	FHitResult OutHit;
+
+	World->LineTraceSingleByChannel(OutHit,
+									StartLocation,
+									EndLocation,
+									ECollisionChannel::ECC_Visibility, ///Channel pertaining to Floor
+									CollisionParam);
+
+	return OutHit.GetActor();
 }
 
 AActor* AGeodroidCharacter::FloorCheck()

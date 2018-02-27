@@ -32,14 +32,6 @@ enum class ESelectDefenseStructure : uint8
 	ESDS_Trap = 1
 };
 
-UENUM()
-enum class EConstructionStatus : uint8
-{
-	ECS_NoActivity,
-	ECS_CheckingSite,
-	ECS_Constructing
-};
-
 class UInputComponent;
 
 UCLASS(config=Game)
@@ -196,9 +188,6 @@ protected:
 	//Defense structure that is selected
 	ESelectDefenseStructure SelectedDefenseStructure;
 
-	//Defense Structure Construction Status
-	EConstructionStatus ConstructionStatus;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
 	//Structure Construction range
 	float StructureConstructionRange;
@@ -231,9 +220,6 @@ protected:
 	//SubFunction of StructurePlacement
 	void SpawnStructure(FVector2D &FloorNodeIndex, FVector &FloorPosition);
 
-	//Function to Construct the Defense Structure at desired location
-	void BuildDefenseStructure();
-
 	//DestroyStructure
 	void DestroyStructure(ADefenseStructures* Structure);
 
@@ -243,14 +229,14 @@ protected:
 	//Select Trap for Construction Action
 	void SelectTrapForConstruction();
 
-	//Set SelectDefenseStructure variable to CheckingSite Status
-	void StartCheckingSite();
-
 	//Set SelectDefenseStructure variable to StructureConstruction Status
 	void DestroyInit();
 
 	//Checks if the Actor provided is visible
 	bool VisibilityCheck(const  AActor* TargetActor);
+
+	//Checks if the Actor provided is visible
+	AActor* LineTraceForward();
 
 	//Checks if the Actor provided is floor
 	AActor* FloorCheck();
@@ -293,7 +279,7 @@ public:
 	//Getter for bIsPlayerDead
 	bool IsPlayerDead();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "CPP Functions")
 		//Function to activate if the Player is hit
 		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 

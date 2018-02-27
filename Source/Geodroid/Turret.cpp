@@ -32,8 +32,6 @@ ATurret::ATurret()
 void ATurret::BeginPlay()
 {
 	Super::BeginPlay();
-	///Default Initialization of Varaibles from Blueprint
-	BuildCost = BP_BuildCost;
 
 	if (UPointerProtection::CheckAndLog(GetWorld(), "World"))
 	{

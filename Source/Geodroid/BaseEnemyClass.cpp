@@ -96,7 +96,7 @@ void ABaseEnemyClass::Tick(float DeltaTime)
 	FVector TargetVector = Player->GetActorLocation() - this->GetActorLocation();
 	TargetVector.Normalize();
 	float TargetDistance = FVector::DistSquared(Player->GetActorLocation(), this->GetActorLocation());
-	
+
 	///Execute the CurrentState Logic
 	switch (CurrentState)
 	{
@@ -107,8 +107,6 @@ void ABaseEnemyClass::Tick(float DeltaTime)
 		{
 			UpdatePathList();
 		}
-
-		//UE_LOG(LogTemp, Warning, TEXT("FollowPath"));
 
 		MovePawnAlongPathList(DeltaTime);
 
@@ -161,6 +159,8 @@ void ABaseEnemyClass::UpdatePathList(FVector2D TargetNodeIndex)
 {
 	Pathfinder = NewObject<UA_Pathfinding>();
 
+	PathList.Empty();
+
 	//Update the PathTArray using the Get Path Function
 	PathList.Append(Pathfinder->GetPathList(CurrentNode.NodeIndex));
 
@@ -180,7 +180,6 @@ void ABaseEnemyClass::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, 
 
 	if (Collider && !ColliderInstigator)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Bullet Damage %f"), Collider->GetBulletDamage()); //TODO REMOVE THIS
 		ApplyDamage(Collider->GetBulletDamage());
 	}
 }
@@ -217,7 +216,6 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 		{
 			///If Target Reached, Point Counter to next Target on PathList
 			PathCounter--;
-			//UE_LOG(LogTemp, Error, TEXT("TargetNode: %f, %f"), PathList[PathCounter].X, PathList[PathCounter].Y);
 		}
 	}
 	else
@@ -231,7 +229,6 @@ void ABaseEnemyClass::SendResourceToPlayer()
 	//Pointer Protection
 	if (!Player) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("SendResource Entered"))
 	Player->AddGold(EnemyGold);
 
 }

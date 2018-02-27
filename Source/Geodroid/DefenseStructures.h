@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "MapClass.h"
+#include "MapNode.h"
 #include "Components/SphereComponent.h"
 #include "DefenseStructures.generated.h"
 
@@ -32,6 +34,9 @@ protected:
 	//Specifies if the Node on which the Structure exist is walkable or not
 	bool bIsNodeWalkable;
 
+	//The Structure's Map Node Index
+	FMapNode StructureMapNode;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
 	//Specifies the Attack Rate in Seconds
 	float AttackRate;
@@ -48,8 +53,9 @@ protected:
 	//Limit to the upgrade of this structure
 	ELevel BuildLevelLimit;
 
-	//Cost of Constructing the Defense Structure (Constant for a Defense Structure)
-	static int32 BuildCost;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
+		//Get the Building Cost from the Blueprint
+		int32 BP_BuildCost;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
 	//Stores the next Level Blueprint
@@ -57,6 +63,7 @@ protected:
 
 	//Check if the DefenseStructure is Activated
 	bool bIsStructureActive;
+
 	
 	///**************************** MEMBER FUNCTIONS **********************************///
 	// Called when the game starts or when spawned
@@ -65,13 +72,9 @@ protected:
 public:
 
 	///*************************** MEMBER VARIABLE **********************************///
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-	//Get the Building Cost from the Blueprint
-	int32 BP_BuildCost;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item Design")
-	//Color of Material
-	FColor MaterialColor;
+		//Color of Material
+		FColor MaterialColor;
 
 	///************************** MEMBER FUNCTION **********************************///
 
@@ -85,7 +88,10 @@ public:
 	bool IsStructureActive();
 
 	//Getter for BUILD_COST
-	static int32 GetBuildCost();
+	int32 GetBuildCost();
+
+	//Getter for Structure Map Node Index
+	FVector2D GetStructureMapNodeIndex();
 
 	//Getter for NextLevelStructureActor
 	TSubclassOf<ADefenseStructures> GetNextLevelStructureActor();	
