@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "GeodroidCharacter.h"
 #include "MapNode.h"
 #include "MapClass.h"
 #include "BaseEnemyClass.h"
@@ -37,12 +38,17 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
-	
-public:
-
-	virtual void Tick(float DeltaTime) override;
 
 	///MEMBER VARIABLES
+	//The player instance
+	AGeodroidCharacter* Player;
+
+	//The player controller
+	APlayerController* PlayerController;
+
+	//Player HUD
+	AGeodroidHUD* PlayerHUD;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Array to Set MapNode Walkables.
 		//NOTE: negative number implies all Node indices after and at that number shall set to false
@@ -54,7 +60,7 @@ public:
 		int32 NodeWorldSize;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
-		//Size of Map in # of Nodes
+		//Size of Map in number of Nodes in X and Y axes
 		FVector2D MapMaxSize;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
@@ -64,8 +70,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Target Node
 		FVector2D TargetNode;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
+
 		//Set the maximum pawns that can be spawned
 		int32 MaxSpawnablePawns;
 
@@ -80,10 +85,34 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
 		TArray<TSubclassOf<ABaseEnemyClass>> EnemyClassList;
 
+	//Current Wave Number
+	int32 CurrentWaveNumber;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
+	//Base Wave Score used to generate the Enemies
+	int32 WaveScore;
+	
+public:
+
+	virtual void Tick(float DeltaTime) override;
+
+	void StartWave();
+	
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
+	//Getter for number of Enemies in play
+	int32 GetEnemyListLength() const;
+
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
+	//Get Max number of enemies in this Wave
+	int32 GetMaxSpawnablePawns() const;
+
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
+	//Get Current Wave Number
+	int32 GetCurrentWaveNumber() const;
+
 private:
 
 	///MEMBER VARIABLES
-
 	//stores the number of pawns spawned
 	int32 PawnCounter;
 
@@ -96,13 +125,17 @@ private:
 	//Array containing all the pawns
 	TArray<ABaseEnemyClass*> EnemyList;
 
-	//Variable keeping the time 
+	//Stores the State the game is now
+	EGameState CurrentGameState;
 	
 	///MEMBER FUNCTIONS
 
 	UFUNCTION()
 		//Spawn an Enemy
 		void SpawnEnemy(int32 PawnClassIndex);
+
+	//Clear Dead Enemy from EnemyList
+	void ClearDeadEnemy();
 
 };
 

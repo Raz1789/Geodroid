@@ -124,8 +124,6 @@ void AGeodroidCharacter::BeginPlay()
 		PlayerHUD = Cast<AGeodroidHUD>(PlayerController->GetHUD());
 	}
 
-	
-
 }
 
 void AGeodroidCharacter::Tick(float DeltaTime)
@@ -172,6 +170,9 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAction("SelectTrap", IE_Pressed, this, &AGeodroidCharacter::SelectTrapForConstruction);
 	PlayerInputComponent->BindAction("DestroyStructure", IE_Pressed, this, &AGeodroidCharacter::DestroyInit);
 	PlayerInputComponent->BindAction("PlaceStructure", IE_Pressed, this, &AGeodroidCharacter::StructurePlacement);
+
+	//Wave Related Inputs
+	PlayerInputComponent->BindAction("StartWave", IE_Pressed, this, &AGeodroidCharacter::StartWave);
 }
 
 void AGeodroidCharacter::OnFire()
@@ -495,6 +496,7 @@ void AGeodroidCharacter::DestroyStructure(ADefenseStructures* Structure)
 		UMapClass::SetMapNodeWalkable(StructureMapnodeIndex.X,
 									  StructureMapnodeIndex.Y,
 									  true);
+		DefenseStructuesSpawnList.Remove(Structure);
 		World->DestroyActor(Structure);
 	}
 }
@@ -596,10 +598,16 @@ bool AGeodroidCharacter::IsPlayerDead()
 
 void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
 {
+	//Pointer Protection
+	if (!PlayerHUD) return;
+
 	AGeodroidProjectile* Collider = Cast<AGeodroidProjectile>(OtherActor);
 	if (Collider)
 	{
-		ApplyDamage(Collider->GetBulletDamage());
+		float Damage = Collider->GetBulletDamage();
+		FString Message = "You took " + FString::SanitizeFloat(Damage) + " damage";
+		PlayerHUD->ReceivePopUpMessage(Message);
+		ApplyDamage(Damage);
 	}
 }
 
@@ -694,6 +702,34 @@ AActor* AGeodroidCharacter::FloorCheck()
 				  false);
 
 	return OutHit.GetActor();
+}
+
+void AGeodroidCharacter::StartWave()
+{
+	if (bIsGameModeReady)
+	{
+		bShouldWaveStart = true;
+	}
+}
+
+bool AGeodroidCharacter::ShouldWaveStart()
+{
+	return bShouldWaveStart;
+}
+
+void AGeodroidCharacter::ResetStartWave()
+{
+	bShouldWaveStart = false;
+}
+
+void AGeodroidCharacter::SetIsGameModeReady()
+{
+	bIsGameModeReady = true;
+}
+
+void AGeodroidCharacter::ResetIsGameModeReady()
+{
+	bIsGameModeReady = false;
 }
 
 void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector& OutCameraLookDirection)

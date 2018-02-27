@@ -54,6 +54,10 @@ AGeodroidGameMode::AGeodroidGameMode()
 	StartNode = FVector2D(1.f, 0.f);
 	TargetNode = FVector2D(10.f, 5.f);
 
+	///WAVE DESIGN VARIABLES
+	CurrentWaveNumber = 0;
+	WaveScore = 2;
+
 	///ENEMY DESIGN VARIABLES
 	TimeBetweenSpawn = 1.f;
 	PawnCounter = 0;
@@ -70,10 +74,38 @@ void AGeodroidGameMode::BeginPlay()
 
 	UMapClass::Init(MapDesignWalkableArray, NodeWorldSize, TargetNode, MapMaxSize);
 
+	//Getting the World pointer
 	if (UPointerProtection::CheckAndLog(GetWorld(), "World"))
 	{
 		World = GetWorld();
 	}
+
+
+	//Getting the player pointer
+	if (World && UPointerProtection::CheckAndLog(World->GetFirstPlayerController(), "PlayerController"))
+	{
+		if (UPointerProtection::CheckAndLog(World->GetFirstPlayerController()->GetPawn(), "Pawn"))
+		{
+			if (UPointerProtection::CheckAndLog(Cast<AGeodroidCharacter>(World->GetFirstPlayerController()->GetPawn()), "Casted Pawn"))
+			{
+				Player = Cast<AGeodroidCharacter>(World->GetFirstPlayerController()->GetPawn());
+			}
+		}
+	}
+
+	//Getting the PlayerController
+	if (Player && UPointerProtection::CheckAndLog(Cast<APlayerController>(Player->GetController()), TEXT("Player Controller")))
+	{
+		PlayerController = Cast<APlayerController>(Player->GetController());
+	}
+
+	//Getting the PlayerHUD
+	if (PlayerController && UPointerProtection::CheckAndLog(Cast<AGeodroidHUD>(PlayerController->GetHUD()), TEXT("Player Controller")))
+	{
+		PlayerHUD = Cast<AGeodroidHUD>(PlayerController->GetHUD());
+	}
+
+	CurrentGameState = EGameState::EGS_GameBegan;
 	
 }
 
@@ -81,32 +113,115 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (PawnCounter < MaxSpawnablePawns)
+	if (!Player) return;
+	if (!PlayerHUD) return;
+
+	ClearDeadEnemy();
+
+	if (CurrentGameState != EGameState::EGS_PlayerWavePrepTime && Player->ShouldWaveStart())
 	{
-		TimeFromLastSpawn += DeltaTime;
+		Player->ResetStartWave();
+		Player->ResetIsGameModeReady();
 	}
 
-	//Check if the SpawnDelay is crossed && if PawnCounter is less than the MAX_SPAWNED_PAWN
-	if ((TimeFromLastSpawn > TimeBetweenSpawn) && PawnCounter < MaxSpawnablePawns)
+	switch (CurrentGameState)
 	{
-		//Reset CurrentTimer
-		TimeFromLastSpawn = 0.f;
-		//Spawn an Enemy
-		SpawnEnemy(0);
-		//Increment PawnCounter
-		PawnCounter++;
-	}
-	if (UMapClass::IsMapNodeStatusChanged())
-	{
-		if (EnemyList.Num() > 0)
+	case EGameState::EGS_GameBegan:
+		CurrentGameState = EGameState::EGS_WaveParamLoading;
+		break;
+	case EGameState::EGS_WaveParamLoading:
+		CurrentWaveNumber++;
+		WaveScore += CurrentWaveNumber;
+		MaxSpawnablePawns = WaveScore;
+		PawnCounter = 0; //Resetting PawnCounter
+		TimeFromLastSpawn = 0; //Resetting the Timer
+		CurrentGameState = EGameState::EGS_PlayerWavePrepTime;
+		break;
+	case EGameState::EGS_PlayerWavePrepTime:
+		PlayerHUD->ReceivePopUpMessage("\'Enter\' to start the Wave");
+		if (Player->ShouldWaveStart())
 		{
-			for (auto& Enemy : EnemyList)
-			{
-				Enemy->UpdatePathList();
-			}
+			CurrentGameState = EGameState::EGS_WaveRunning;
+			Player->ResetStartWave();
+			Player->ResetIsGameModeReady();
 		}
-		UMapClass::ResetMapNodeChangeStatus();
+		else
+		{
+			Player->SetIsGameModeReady();
+		}
+		break;
+	case EGameState::EGS_WaveRunning:
+		
+		//Update the SpawnTimer
+		if (PawnCounter < MaxSpawnablePawns)
+		{
+			TimeFromLastSpawn += DeltaTime;
+		}
+
+		//Check if the SpawnDelay has crossed && if PawnCounter is less than the MaxSpawnablePawns
+		if ((TimeFromLastSpawn > TimeBetweenSpawn) && PawnCounter < MaxSpawnablePawns)
+		{
+			//Reset CurrentTimer
+			TimeFromLastSpawn = 0.f;
+			//Spawn an Enemy
+			SpawnEnemy(0);
+			//Increment PawnCounter
+			PawnCounter++;
+		}
+		
+		//Update the Enemy PathList if the Map has Node has changed Status
+		if (UMapClass::IsMapNodeStatusChanged())
+		{
+			if (EnemyList.Num() > 0)
+			{
+				for (auto& Enemy : EnemyList)
+				{
+					Enemy->UpdatePathList();
+				}
+			}
+			UMapClass::ResetMapNodeChangeStatus();
+		}
+
+		//Check if eligible to go to next phase Next condition
+		if (EnemyList.Num() < 1)
+		{
+			CurrentGameState = EGameState::EGS_WaveEnded;
+		}
+		break;
+	case EGameState::EGS_WaveEnded:
+		CurrentGameState = EGameState::EGS_ParamResetting;
+		break;
+	case EGameState::EGS_ParamResetting:
+		CurrentGameState = EGameState::EGS_WaveParamLoading;
+		break;
+	case EGameState::EGS_GameLost:
+		break;
+	case EGameState::EGS_GameEnded:
+		break;
 	}
+}
+
+void AGeodroidGameMode::StartWave()
+{
+	if (CurrentGameState == EGameState::EGS_PlayerWavePrepTime)
+	{
+		CurrentGameState = EGameState::EGS_WaveRunning;
+	}
+}
+
+int32 AGeodroidGameMode::GetEnemyListLength() const
+{
+	return EnemyList.Num() - 1;
+}
+
+int32 AGeodroidGameMode::GetMaxSpawnablePawns() const
+{
+	return MaxSpawnablePawns;
+}
+
+int32 AGeodroidGameMode::GetCurrentWaveNumber() const
+{
+	return CurrentWaveNumber;
 }
 
 void AGeodroidGameMode::SpawnEnemy(int32 PawnClassIndex)
@@ -125,5 +240,16 @@ void AGeodroidGameMode::SpawnEnemy(int32 PawnClassIndex)
 	{
 		UE_LOG(LogTemp, Error, TEXT("EnemyClass Class not initialized"));
 
+	}
+}
+
+void AGeodroidGameMode::ClearDeadEnemy()
+{
+	for (int32 EnemyCounter = 0; EnemyCounter < EnemyList.Num(); EnemyCounter++)
+	{
+		if (!EnemyList[EnemyCounter] || EnemyList[EnemyCounter]->IsPendingKill())
+		{
+			EnemyList.RemoveAt(EnemyCounter);
+		}
 	}
 }

@@ -173,6 +173,12 @@ protected:
 	//The Player HUD
 	AGeodroidHUD* PlayerHUD;
 
+	//Start Wave Variable
+	bool bShouldWaveStart;
+
+	//If GameMode is ready to StartWave
+	bool bIsGameModeReady;
+
 	//The Node in which the character is standing
 	FMapNode CharacterMapNode;
 
@@ -211,9 +217,6 @@ protected:
 	//Ticks every Frame
 	virtual void Tick(float DeltaTime) override;
 
-	//Deducts the cost of structure from the Player and returns if it is possible to construct
-	bool DeductStructureCost(int32 AmountToBeReceived);
-
 	//Function to check feasibility of Construction of Defense Structure
 	void StructurePlacement();
 
@@ -240,6 +243,9 @@ protected:
 
 	//Checks if the Actor provided is floor
 	AActor* FloorCheck();
+
+	//true when StartWave button is pressed
+	void StartWave();
 
 	//Get the Camera Location and LookDirection
 	void GetCameraDetails(FVector& OutCameraLocation, FVector& OutCameraLookDirection);
@@ -278,6 +284,15 @@ public:
 
 	//Getter for bIsPlayerDead
 	bool IsPlayerDead();
+
+	//Get and Reset bShouldWaveStart by GameMode
+	bool ShouldWaveStart();
+	void ResetStartWave();
+
+	//Set and Reset for bIsGameModeReady for Wave Start
+	void SetIsGameModeReady();
+	void ResetIsGameModeReady();
+
 
 	UFUNCTION(BlueprintCallable, Category = "CPP Functions")
 		//Function to activate if the Player is hit
