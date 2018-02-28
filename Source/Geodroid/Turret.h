@@ -23,7 +23,7 @@ class GEODROID_API ATurret : public ADefenseStructures
 protected:
 	///***************** MEMBER VARIABLE *******************///
 	//CollisionShape for Sweeping for enemies
-	FCollisionShape InfluenceBox;
+	FCollisionShape InfluenceSphere;
 
 	//Array of Enemies inside the InfluenceBox
 	TArray<FHitResult> OutHits;

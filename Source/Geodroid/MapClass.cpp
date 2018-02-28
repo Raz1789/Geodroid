@@ -9,6 +9,8 @@ FVector2D UMapClass::MapMaxSize = FVector2D(9, 7);
 
 TArray<bool> UMapClass::MapWalkableArray;
 
+TArray<bool> UMapClass::MapStructurePresentArray;
+
 TArray<FMapNode> UMapClass::Map;
 
 bool UMapClass::bMapNodeStatusChanged;
@@ -68,6 +70,8 @@ void UMapClass::CreateMapGrid()
 
 	///Extract the walkable array
 	MapWalkableExtractor();
+
+	MapStructurePresentArray.Init(false, Map.Num());
 
 	if (IsDebugOn())
 	{
@@ -137,6 +141,16 @@ FVector UMapClass::GetMapNodePosition(int32 X, int32 Y)
 bool UMapClass::IsMapNodeWalkable(int32 X, int32 Y)
 {
 	return Map[IndexFrom1DTo2D(X, Y, MapMaxSize)].bWalkable;
+}
+
+bool UMapClass::IsStructureOnNode(int32 X, int32 Y)
+{
+	return MapStructurePresentArray[IndexFrom1DTo2D(X, Y, MapMaxSize)];
+}
+
+void UMapClass::SetStructureOnNode(int32 X, int32 Y, bool _bStructurePresent)
+{
+	MapStructurePresentArray[IndexFrom1DTo2D(X, Y, MapMaxSize)] = _bStructurePresent;
 }
 
 void UMapClass::SetMapNodeWalkable(int32 X, int32 Y, bool _bWalkable)

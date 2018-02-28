@@ -6,7 +6,7 @@ ATurret::ATurret()
 {
 	///Default Initialization of Varaibles
 	BP_BuildCost = 100;
-	bIsNodeWalkable = false;
+	bIsStructureWalkable = false;
 	AttackRate = 1.f;
 	AttackDamage = 5.f;
 	CurrentLevelOfStructure = ELevel::Level1;
@@ -14,7 +14,7 @@ ATurret::ATurret()
 
 	///Turret Influence Components
 	float SphereRadius = UMapClass::GetWorldNodeSize() * 2 * 1.4f;
-	InfluenceBox = FCollisionShape::MakeSphere(SphereRadius);
+	InfluenceSphere = FCollisionShape::MakeSphere(SphereRadius);
 
 	///CollisionComponent
 	RestrictionArea = CreateDefaultSubobject<UBoxComponent>(TEXT("RestrictionArea"));
@@ -23,9 +23,6 @@ ATurret::ATurret()
 	RestrictionArea->BodyInstance.SetCollisionProfileName("BlockAll");
 
 	RootComponent = RestrictionArea;
-
-	///Turret Color
-	MaterialColor = FColor(1.f, 0.f, 0.f, 0.5f);
 
 }
 
@@ -61,11 +58,6 @@ void ATurret::Tick(float DeltaTime)
 
 		CheckAndExecuteAttack();
 	}
-	//else
-	//{
-	//	//TODO Remove at Production
-	//	UE_LOG(LogTemp, Warning, TEXT("Structure is not Activated"));
-	//}
 }
 
 void ATurret::CheckAndExecuteAttack()
@@ -75,8 +67,8 @@ void ATurret::CheckAndExecuteAttack()
 
 	///******************** SETTING TURRET ROTATION *************************///
 	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);
-	if (World->SweepMultiByObjectType(OutHits, ActorLocation, ActorLocation, FQuat::Identity, ObjectParams, InfluenceBox))
+	ObjectParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3); //Enemy Channel
+	if (World->SweepMultiByObjectType(OutHits, ActorLocation, ActorLocation, FQuat::Identity, ObjectParams, InfluenceSphere))
 	{
 		bool bIsTargetActorPresentInHitResult = false;
 		if (TargetActor)
@@ -128,7 +120,7 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 				FVector SpawnLocation;
 
 				///Vector to Enemy = -TurretVector from origin + (EnemyVector + Origin + ShootDelay Offset)
-				SpawnLocation = -BP_Turret->GetComponentLocation() + (TargetActor->GetActorLocation() + /*OFFSET*/(TargetActor->GetActorForwardVector() * 100.f));
+				SpawnLocation = -BP_Turret->GetComponentLocation() + (TargetActor->GetActorLocation() + /*OFFSET*/(TargetActor->GetActorForwardVector() * 50.f));
 				SpawnLocation.Normalize(); ///To get the Direction Vector
 				FVector SpawnDirection = SpawnLocation;
 				SpawnLocation *= 100.f; ///Scale to get a point 50cm from the start of vector
@@ -183,12 +175,12 @@ bool ATurret::IsPlayerInVisibleRange(const  AActor* _TargetActor) //TODO Not tes
 
 	World->LineTraceSingleByChannel(OutHit,
 									SpawnLocation,
-									SpawnLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
+									SpawnLocation + SpawnDirection * (InfluenceSphere.GetSphereRadius()),
 									ECC_Visibility,
 									CollisionParam);
 	DrawDebugLine(World,
 	SpawnLocation,
-	SpawnLocation + SpawnDirection * (InfluenceBox.GetSphereRadius()),
+	SpawnLocation + SpawnDirection * (InfluenceSphere.GetSphereRadius()),
 	FColor::Red,
 	false);
 

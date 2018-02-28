@@ -49,6 +49,12 @@ protected:
 	//Player HUD
 	AGeodroidHUD* PlayerHUD;
 
+	//Check if all pawns have spawned
+	bool bAllSpawned;
+
+	//check if this is the first run of the state
+	bool bIsThisTheFirstRun;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Array to Set MapNode Walkables.
 		//NOTE: negative number implies all Node indices after and at that number shall set to false

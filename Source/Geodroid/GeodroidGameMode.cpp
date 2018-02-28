@@ -106,6 +106,9 @@ void AGeodroidGameMode::BeginPlay()
 	}
 
 	CurrentGameState = EGameState::EGS_GameBegan;
+
+	bAllSpawned = false;
+	bIsThisTheFirstRun = true;
 	
 }
 
@@ -127,18 +130,30 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 	switch (CurrentGameState)
 	{
 	case EGameState::EGS_GameBegan:
+
 		CurrentGameState = EGameState::EGS_WaveParamLoading;
+
+		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_WaveParamLoading:
-		CurrentWaveNumber++;
-		WaveScore += CurrentWaveNumber;
-		MaxSpawnablePawns = WaveScore;
-		PawnCounter = 0; //Resetting PawnCounter
-		TimeFromLastSpawn = 0; //Resetting the Timer
+		if (bIsThisTheFirstRun)
+		{
+			CurrentWaveNumber++;
+			WaveScore += CurrentWaveNumber;
+			MaxSpawnablePawns = WaveScore;
+			PawnCounter = 0; //Resetting PawnCounter
+			TimeFromLastSpawn = 0; //Resetting the Timer
+		}
 		CurrentGameState = EGameState::EGS_PlayerWavePrepTime;
+
+		if(!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_PlayerWavePrepTime:
-		PlayerHUD->ReceivePopUpMessage("\'Enter\' to start the Wave");
+		if (bIsThisTheFirstRun)
+		{
+			PlayerHUD->ReceivePopUpMessage("Press \'ENTER\' to start the wave");
+			bIsThisTheFirstRun = false;
+		}
 		if (Player->ShouldWaveStart())
 		{
 			CurrentGameState = EGameState::EGS_WaveRunning;
@@ -151,7 +166,7 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 		}
 		break;
 	case EGameState::EGS_WaveRunning:
-		
+
 		//Update the SpawnTimer
 		if (PawnCounter < MaxSpawnablePawns)
 		{
@@ -168,6 +183,12 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 			//Increment PawnCounter
 			PawnCounter++;
 		}
+
+		//check if all pawns spawned
+		if (PawnCounter >= MaxSpawnablePawns)
+		{
+			bAllSpawned = true;
+		}
 		
 		//Update the Enemy PathList if the Map has Node has changed Status
 		if (UMapClass::IsMapNodeStatusChanged())
@@ -183,20 +204,27 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 		}
 
 		//Check if eligible to go to next phase Next condition
-		if (EnemyList.Num() < 1)
+		if (EnemyList.Num() < 1 && bAllSpawned)
 		{
+			bAllSpawned = false;
 			CurrentGameState = EGameState::EGS_WaveEnded;
 		}
+
+		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_WaveEnded:
 		CurrentGameState = EGameState::EGS_ParamResetting;
+		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_ParamResetting:
 		CurrentGameState = EGameState::EGS_WaveParamLoading;
+		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_GameLost:
+		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_GameEnded:
+		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	}
 }

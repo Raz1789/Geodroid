@@ -32,7 +32,7 @@ protected:
 	///**************************** MEMBER VARIABLES **********************************///
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
 	//Specifies if the Node on which the Structure exist is walkable or not
-	bool bIsNodeWalkable;
+	bool bIsStructureWalkable; //TODO use this variable for checking
 
 	//The Structure's Map Node Index
 	FMapNode StructureMapNode;
@@ -86,6 +86,9 @@ public:
 
 	//Getter for bIsStructureActive
 	bool IsStructureActive();
+
+	//Getter for bIsStructureWalkable
+	bool IsStructureWalkable();
 
 	//Getter for BUILD_COST
 	int32 GetBuildCost();

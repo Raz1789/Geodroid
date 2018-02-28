@@ -44,6 +44,12 @@ public:
 		static bool IsMapNodeWalkable(int32 X, int32 Y);
 
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
+		static bool IsStructureOnNode(int32 X, int32 Y);
+
+	UFUNCTION(BlueprintCallable, Category = "Setter Functions")
+		static void SetStructureOnNode(int32 X, int32 Y, bool _bStructurePresent);
+
+	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
 		static bool IsMapNodeStatusChanged();
 
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
@@ -66,6 +72,9 @@ private:
 
 	//Map containing all the nodes in the game world
 	static TArray<FMapNode> Map;
+
+	//Array mask containing whether a node has a structure or not
+	static TArray<bool> MapStructurePresentArray;
 
 	//Returns if the game Map node status is changed
 	static bool bMapNodeStatusChanged;

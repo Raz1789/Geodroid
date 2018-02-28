@@ -374,27 +374,36 @@ void AGeodroidCharacter::StructurePlacement()
 			FVector2D FloorNodeIndex = UMapClass::WorldToMapNode(FloorPosition).NodeIndex;
 			///Check if FloorNode isWalkable
 			bool bIsFloorNodeWalkable = UMapClass::IsMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y);
-			if (bIsFloorNodeWalkable)
+			bool bIsStructureOnNode = UMapClass::IsStructureOnNode(FloorNodeIndex.X, FloorNodeIndex.Y);
+			if (bIsFloorNodeWalkable && !bIsStructureOnNode)
 			{
 				///Checking that character is not on the SpawnLocation
 				if (CharacterMapNode.NodeIndex.X != FloorNodeIndex.X && CharacterMapNode.NodeIndex.Y != FloorNodeIndex.Y)
 				{
-					///Set FloorNode Walkable to false
-					UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
-					///Check if PathExist if Structure placed
-					UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
-					bool bIsPathAvailable = Pathfinding->PathExist(FloorNodeIndex);
-
-					if (bIsPathAvailable)
+					if ((uint8)(SelectedDefenseStructure) == 0)
 					{
-						///Spawn the Structure
-						SpawnStructure(FloorNodeIndex, FloorPosition);
+						///Set FloorNode Walkable to false
+						UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
+						///Check if PathExist if Structure placed
+						UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
+						bool bIsPathAvailable = Pathfinding->PathExist(FloorNodeIndex);
+
+						if (bIsPathAvailable)
+						{
+							///Spawn the Structure
+							SpawnStructure(FloorNodeIndex, FloorPosition);
+						}
+						else
+						{
+							PlayerHUD->ReceivePopUpMessage("You will block the path if you construct here");
+							///Set FloorNode Walkable to false
+							UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
+						}
 					}
 					else
 					{
-						PlayerHUD->ReceivePopUpMessage("You will block the path if you construct here");
-						///Set FloorNode Walkable to false
-						UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, true);
+						///Spawn the Structure
+						SpawnStructure(FloorNodeIndex, FloorPosition);
 					}
 				}
 				else
@@ -449,6 +458,7 @@ void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &Floo
 		{
 			if (TempDefenseStructurePointer)
 			{
+				UMapClass::SetStructureOnNode(FloorNodeIndex.X, FloorNodeIndex.Y, true);
 				TempDefenseStructurePointer->ActivateTower();
 				bIsConstructionFeasible = true;
 			}
@@ -496,6 +506,10 @@ void AGeodroidCharacter::DestroyStructure(ADefenseStructures* Structure)
 		UMapClass::SetMapNodeWalkable(StructureMapnodeIndex.X,
 									  StructureMapnodeIndex.Y,
 									  true);
+		UMapClass::SetStructureOnNode(StructureMapnodeIndex.X,
+									  StructureMapnodeIndex.Y,
+									  false);
+
 		DefenseStructuesSpawnList.Remove(Structure);
 		World->DestroyActor(Structure);
 	}

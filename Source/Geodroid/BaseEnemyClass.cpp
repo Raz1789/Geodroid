@@ -26,10 +26,11 @@ ABaseEnemyClass::ABaseEnemyClass()
 	CurrentState = EnemyState::FollowPath;
 	PreviousState = CurrentState;
 	EnemyVelocity = 600.f;
-	EnemyGold = 50;
+	EnemyGold = 20;
 	MaxEnemyHealth = 15.f;
 	EnemyFireRate = 3.f;
 	AttackDamage = 5.f;
+	SpeedImpact = 1.f;
 }
 
 // Called when the game starts or when spawned
@@ -143,6 +144,16 @@ void ABaseEnemyClass::Tick(float DeltaTime)
 
 	PreviousState = CurrentState;
 
+}
+
+void ABaseEnemyClass::AddSpeedEffect()
+{
+	SpeedImpact = 0.5f;
+}
+
+void ABaseEnemyClass::ResetSpeedEffect()
+{
+	SpeedImpact = 1.f;
 }
 
 void ABaseEnemyClass::ApplyDamage(float Damage)
@@ -337,6 +348,6 @@ void ABaseEnemyClass::MoveToTargetVector(const FVector & TargetVector)
 	SetActorRotation(FMath::Lerp(GetActorRotation(), LookRotator, 0.15f));
 
 	///move towards target
-	AddMovementInput(GetActorForwardVector(), EnemyVelocity / 1200.f);
+	AddMovementInput(GetActorForwardVector(), (EnemyVelocity / 1200.f) * SpeedImpact);
 }
 

@@ -87,6 +87,9 @@ protected:
 	//TODO work on the collision aspect
 	USphereComponent* CollisionComponent = nullptr;
 
+	//Influence the speed of Enemy
+	float SpeedImpact;
+
 	///MEMBER FUNCTION
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -143,6 +146,12 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	//Reduce speed by half
+	void AddSpeedEffect();
+
+	//Return speed back
+	void ResetSpeedEffect();
 
 	UFUNCTION()
 	//Subtracts damage from health
