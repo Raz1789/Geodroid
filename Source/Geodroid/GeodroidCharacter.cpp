@@ -618,10 +618,13 @@ void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActo
 	AGeodroidProjectile* Collider = Cast<AGeodroidProjectile>(OtherActor);
 	if (Collider)
 	{
-		float Damage = Collider->GetBulletDamage();
-		FString Message = "You took " + FString::SanitizeFloat(Damage) + " damage";
-		PlayerHUD->ReceivePopUpMessage(Message);
-		ApplyDamage(Damage);
+		if (Collider->Instigator != this)
+		{
+			float Damage = Collider->GetBulletDamage();
+			FString Message = "You took " + FString::SanitizeFloat(Damage) + " damage";
+			PlayerHUD->ReceivePopUpMessage(Message);
+			ApplyDamage(Damage);
+		}
 	}
 }
 

@@ -109,13 +109,16 @@ void AGeodroidGameMode::BeginPlay()
 
 	bAllSpawned = false;
 	bIsThisTheFirstRun = true;
-	
+	EternalFlameHealth = 3;	
+	bGameQuitting = false;
 }
 
 void AGeodroidGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//Pointer Protection
+	if (!World) return;
 	if (!Player) return;
 	if (!PlayerHUD) return;
 
@@ -125,6 +128,20 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 	{
 		Player->ResetStartWave();
 		Player->ResetIsGameModeReady();
+	}
+
+	if (Player->GetPlayerHealth() <= 0 && !bGameQuitting)
+	{
+		CurrentGameState = EGameState::EGS_ParamResetting;
+		bIsThisTheFirstRun = true;
+		bGameQuitting = true;
+	}
+
+	if (EternalFlameHealth <= 0 && !bGameQuitting)
+	{
+		CurrentGameState = EGameState::EGS_GameLost;
+		bIsThisTheFirstRun = true;
+		bGameQuitting = true;
 	}
 
 	switch (CurrentGameState)
@@ -157,6 +174,9 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 		if (Player->ShouldWaveStart())
 		{
 			CurrentGameState = EGameState::EGS_WaveRunning;
+
+			if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
+
 			Player->ResetStartWave();
 			Player->ResetIsGameModeReady();
 		}
@@ -167,6 +187,11 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 		break;
 	case EGameState::EGS_WaveRunning:
 
+		if (bIsThisTheFirstRun)
+		{
+			PlayerHUD->ReceivePopUpMessage("Enemies Spawning..... Buck up!!!");
+			bIsThisTheFirstRun = false;
+		}
 		//Update the SpawnTimer
 		if (PawnCounter < MaxSpawnablePawns)
 		{
@@ -203,28 +228,62 @@ void AGeodroidGameMode::Tick(float DeltaTime)
 			UMapClass::ResetMapNodeChangeStatus();
 		}
 
+		//Check if EnemyReached Endpoint
+		if (EnemyList.Num() > 0)
+		{
+			for (auto& Enemy : EnemyList)
+			{
+				if (Enemy)
+				{
+					bool bHasEnemyReachedEndpoint = Enemy->HasEnemyReachedEndpoint();
+					if (bHasEnemyReachedEndpoint)
+					{
+						SubtractEternalFlameHealth();
+						Enemy->ResetReachedEndPointSuccessfully();
+					}
+				}
+			}
+		}
+
 		//Check if eligible to go to next phase Next condition
 		if (EnemyList.Num() < 1 && bAllSpawned)
 		{
 			bAllSpawned = false;
 			CurrentGameState = EGameState::EGS_WaveEnded;
+			bIsThisTheFirstRun = true;
 		}
-
-		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_WaveEnded:
+		if (bIsThisTheFirstRun)
+		{
+			PlayerHUD->ReceivePopUpMessage("Wave Ended");
+		}
 		CurrentGameState = EGameState::EGS_ParamResetting;
-		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
+		bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_ParamResetting:
-		CurrentGameState = EGameState::EGS_WaveParamLoading;
-		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
+		PlayerHUD->ReceivePopUpMessage("Game getting over");
+		if (Player->GetPlayerHealth() > 0)
+		{
+			CurrentGameState = EGameState::EGS_WaveParamLoading;
+		}
+		else
+		{
+			CurrentGameState = EGameState::EGS_GameLost;
+		}
+		bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_GameLost:
-		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
+		if (bIsThisTheFirstRun)
+		{
+			PlayerHUD->ReceivePopUpMessage("Game Over");
+		}
+
+		CurrentGameState = EGameState::EGS_GameEnded;
+		bIsThisTheFirstRun = true;
 		break;
 	case EGameState::EGS_GameEnded:
-		if (!bIsThisTheFirstRun)	bIsThisTheFirstRun = true;
+		bIsThisTheFirstRun = true;
 		break;
 	}
 }
@@ -239,7 +298,7 @@ void AGeodroidGameMode::StartWave()
 
 int32 AGeodroidGameMode::GetEnemyListLength() const
 {
-	return EnemyList.Num() - 1;
+	return EnemyList.Num();
 }
 
 int32 AGeodroidGameMode::GetMaxSpawnablePawns() const
@@ -252,6 +311,11 @@ int32 AGeodroidGameMode::GetCurrentWaveNumber() const
 	return CurrentWaveNumber;
 }
 
+void AGeodroidGameMode::SubtractEternalFlameHealth()
+{
+	EternalFlameHealth--;
+}
+
 void AGeodroidGameMode::SpawnEnemy(int32 PawnClassIndex)
 {
 	if (!World) return;
@@ -261,7 +325,7 @@ void AGeodroidGameMode::SpawnEnemy(int32 PawnClassIndex)
 
 			//Spawn the actor at that location
 			FActorSpawnParameters SpawnParams;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 			EnemyList.Add(World->SpawnActor<ABaseEnemyClass>(EnemyClassList[PawnClassIndex], position, FRotator(0.f), SpawnParams));
 	}
 	else

@@ -55,6 +55,12 @@ protected:
 	//check if this is the first run of the state
 	bool bIsThisTheFirstRun;
 
+	//Game Setting to quit
+	bool bGameQuitting;
+
+	//Eternal Flame Health
+	int32 EternalFlameHealth;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
 		//Array to Set MapNode Walkables.
 		//NOTE: negative number implies all Node indices after and at that number shall set to false
@@ -91,12 +97,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
 		TArray<TSubclassOf<ABaseEnemyClass>> EnemyClassList;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Design|Enemy")
 	//Current Wave Number
 	int32 CurrentWaveNumber;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
 	//Base Wave Score used to generate the Enemies
 	int32 WaveScore;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Design|Enemy")
+		//Stores the State the game is now
+		EGameState CurrentGameState;
 	
 public:
 
@@ -116,6 +127,10 @@ public:
 	//Get Current Wave Number
 	int32 GetCurrentWaveNumber() const;
 
+	UFUNCTION(BlueprintCallable, Category = "CPP Functions")
+		//Called when Enemy reaches the Eternal Flame
+		void SubtractEternalFlameHealth();
+
 private:
 
 	///MEMBER VARIABLES
@@ -130,9 +145,6 @@ private:
 
 	//Array containing all the pawns
 	TArray<ABaseEnemyClass*> EnemyList;
-
-	//Stores the State the game is now
-	EGameState CurrentGameState;
 	
 	///MEMBER FUNCTIONS
 

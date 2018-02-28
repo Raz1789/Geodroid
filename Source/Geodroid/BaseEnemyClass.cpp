@@ -31,6 +31,8 @@ ABaseEnemyClass::ABaseEnemyClass()
 	EnemyFireRate = 3.f;
 	AttackDamage = 5.f;
 	SpeedImpact = 1.f;
+	bReachedEndPointSuccessfully = false;
+	bGameModeRetrievedInformation = false;
 }
 
 // Called when the game starts or when spawned
@@ -92,6 +94,8 @@ void ABaseEnemyClass::Tick(float DeltaTime)
 	if (CurrentNode == UMapClass::GetTargetNode() || EndDistance < 40000.f)
 	{
 		CurrentState = EnemyState::Dead;
+		if(!bGameModeRetrievedInformation)
+			bReachedEndPointSuccessfully = true;
 	}
 	//TODO Move FollowPlayer to Another Function
 	FVector TargetVector = Player->GetActorLocation() - this->GetActorLocation();
@@ -122,6 +126,8 @@ void ABaseEnemyClass::Tick(float DeltaTime)
 		else if (EndDistance <= 40000.f)
 		{
 			CurrentState = EnemyState::Dead;
+			if(!bGameModeRetrievedInformation)
+			bReachedEndPointSuccessfully = true;
 		}
 
 		///Updating the Firetimer
@@ -195,6 +201,17 @@ void ABaseEnemyClass::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, 
 	}
 }
 
+bool ABaseEnemyClass::HasEnemyReachedEndpoint()
+{
+	return bReachedEndPointSuccessfully;
+}
+
+void ABaseEnemyClass::ResetReachedEndPointSuccessfully()
+{
+	bReachedEndPointSuccessfully = false;
+	bGameModeRetrievedInformation = true;
+}
+
 void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 {
 	//Pointer protection
@@ -232,6 +249,7 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 	else
 	{
 		CurrentState = EnemyState::Dead;
+			bReachedEndPointSuccessfully = true;
 	}
 }
 

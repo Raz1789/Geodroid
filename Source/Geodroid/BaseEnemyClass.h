@@ -66,6 +66,12 @@ protected:
 	//Time Lapsed after last fire
 	float TimeFromLastFire;
 
+	//True when enemy successfully reaches the Endpoint
+	bool bReachedEndPointSuccessfully;
+
+	//True when GameMode retrieved the information on reaching the endpoint
+	bool bGameModeRetrievedInformation;
+
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
 		//Projectile class
 	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
@@ -111,8 +117,6 @@ protected:
 
 	//Move Enemy to the Target Vector provided
 	void MoveToTargetVector(const FVector& TargetVector);
-
-	
 
 public:	
 	///MEMBER VARIABLE
@@ -168,5 +172,13 @@ public:
 	UFUNCTION()
 	//Function to activate if the Enemy is hit
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	UFUNCTION()
+		//Getter for ReachedEndPointSuccessfully
+		bool HasEnemyReachedEndpoint();
+
+	UFUNCTION()
+		//Getter for ReachedEndPointSuccessfully
+		void ResetReachedEndPointSuccessfully();
 	
 };
