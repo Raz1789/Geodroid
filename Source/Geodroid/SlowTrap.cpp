@@ -16,7 +16,7 @@ ASlowTrap::ASlowTrap() : Super()
 	///Setting the InfluenceBox
 	InfluenceBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InfluenceBox"));
 	RootComponent = InfluenceBox;
-	float BoxExtends = UMapClass::GetWorldNodeSize() / 2 + /*OFFSET*/ 10.0f; //Setting to the size of a node + Offset
+	float BoxExtends = UMapClass::GetWorldNodeSize() / 2 + /*OFFSET*/ 30.0f; //Setting to the size of a node + Offset
 	InfluenceBox->SetBoxExtent(FVector(BoxExtends)); 
 	InfluenceBox->bGenerateOverlapEvents = true;
 	InfluenceBox->bMultiBodyOverlap = true;

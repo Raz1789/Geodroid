@@ -381,9 +381,9 @@ void AGeodroidCharacter::StructurePlacement()
 					{
 						///Set FloorNode Walkable to false
 						UMapClass::SetMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y, false);
-						///Check if PathExist if Structure placed
+						///Check if CheckPathBlocked if Structure placed
 						UA_Pathfinding* Pathfinding = NewObject<UA_Pathfinding>();
-						bool bIsPathAvailable = Pathfinding->PathExist(FloorNodeIndex);
+						bool bIsPathAvailable = Pathfinding->CheckPathBlocked(FloorNodeIndex);
 
 						if (bIsPathAvailable)
 						{

@@ -4,15 +4,26 @@
 
 #define OUT
 
+/******************************* STRUCTURE DEFINITIONS **********************************************************/
 #pragma region STRUCT FUNCTION DEFINITIONS
 
-UA_Pathfinding::PathNode::PathNode(FVector2D _CurrentPathNode, PathNode* _PreviousPathNode, FVector2D _StartPathNode, FVector2D _TargetPathNode)
+///***********************************************************************************************************///
+///                                     STRUCTURE CONSTRUCTOR
+///***********************************************************************************************************////
+UA_Pathfinding::PathNode::PathNode(FVector2D _CurrentPathNode,
+								   PathNode* _PreviousPathNode,
+								   FVector2D _StartPathNode,
+								   FVector2D _TargetPathNode)
 {
 	CurrentMapNode = _CurrentPathNode;
 	PreviousPathNode = _PreviousPathNode;
 	CalculateCost(_StartPathNode, _TargetPathNode);
 }
 
+
+///***********************************************************************************************************///
+///                           OPERATOR "<" OVERLOADING FOR SORT FUNCTION IN TARRAY
+///***********************************************************************************************************////
 bool UA_Pathfinding::PathNode::operator< (const PathNode& other) const
 {
 	if (FCost < other.FCost)
@@ -29,6 +40,9 @@ bool UA_Pathfinding::PathNode::operator< (const PathNode& other) const
 	}
 }
 
+///***********************************************************************************************************///
+///                           OPERATOR "==" OVERLOADING FOR CONTAINS FUNCTION IN TARRAY
+///***********************************************************************************************************////
 bool UA_Pathfinding::PathNode::operator== (const PathNode& other) const
 {
 	if (this != &other) {
@@ -48,6 +62,10 @@ bool UA_Pathfinding::PathNode::operator== (const PathNode& other) const
 	
 }
 
+
+///***********************************************************************************************************///
+///                          CALCULATES THE H, G AND F COST FOR THE NODE
+///***********************************************************************************************************////
 void UA_Pathfinding::PathNode::CalculateCost(FVector2D StartPathNode, FVector2D TargetPathNode)
 {
 	GCost = FVector2D::DistSquared(StartPathNode, CurrentMapNode);
@@ -55,44 +73,101 @@ void UA_Pathfinding::PathNode::CalculateCost(FVector2D StartPathNode, FVector2D 
 	FCost = GCost + HCost;
 }
 
+
+///***********************************************************************************************************///
+///                                  DESTRUCTOR
+///***********************************************************************************************************////
 UA_Pathfinding::PathNode::~PathNode()
 {
-	delete PreviousPathNode;
+	delete PreviousPathNode; //delete the Previous path node upon deletion of this structures
 }
 
 #pragma endregion
 
+
+
+/******************************* CLASS DEFINITIONS *************************************************************/
 #pragma region CLASS MEMBER FUNCTION DEFINITIONS
 
+
+///***********************************************************************************************************///
+///                                  CONSTRUCTOR
+///***********************************************************************************************************////
 UA_Pathfinding::UA_Pathfinding()
 {
 	//Creating the Neighbours list
-	NeighbourList.Add(FVector2D(-1, 0));
-	NeighbourList.Add(FVector2D(0, -1));
-	NeighbourList.Add(FVector2D(1, 0));
-	NeighbourList.Add(FVector2D(0, 1));
+	NeighbourOffsetList.Add(FVector2D(-1, 0));
+	NeighbourOffsetList.Add(FVector2D(0, -1));
+	NeighbourOffsetList.Add(FVector2D(1, 0));
+	NeighbourOffsetList.Add(FVector2D(0, 1));
 
-	MapMaxSize = FVector2D(15.f, 7.f);
+	MapMaxSize = FVector2D(15.f, 7.f); //INITIALIZING WITH DEFAULT MAXSIZE
 }
 
-TArray<FVector2D> UA_Pathfinding::GetPathList(FVector2D StartIndex,	FVector2D EndIndex)
+///***********************************************************************************************************///
+///          CHECKS IF PATH IS NOT BLOCKED IF A STRUCTURE IS PLACED IN THE START INDEX
+///***********************************************************************************************************////
+bool UA_Pathfinding::CheckPathBlocked(FVector2D StartIndex)
 {
+	//Variable to discard
 	TArray<FVector2D> OutPathList;
 
-	bool bPathExist;
+	bool bPathExist = false;
 
+	//check individual neighbors of the start node to see if a path exist to the each neighbour
+	for (FVector2D& NeighbourOffset : NeighbourOffsetList)
+	{
+		//Get the Neighbour Node
+		FVector2D CheckingNode = StartIndex + NeighbourOffset;
+
+		//Checking for boundary condition
+		bool bIsNodeInsideMap = CheckBoundary(CheckingNode);
+
+		if (bIsNodeInsideMap)
+		{
+			//Checking if the neighbour is walkable
+			bool IsCheckNodeWalkable = UMapClass::IsMapNodeWalkable(CheckingNode.X, CheckingNode.Y);
+			if (IsCheckNodeWalkable)
+			{
+				//Check if a path exist from this neighbour
+				bool bIsPathAvailable = CalculatePathList(OutPathList, CheckingNode);
+				if (!bIsPathAvailable)
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+///***********************************************************************************************************///
+///                              RETURNS THE PATH NODE INDEX LIST
+///***********************************************************************************************************////
+TArray<FVector2D> UA_Pathfinding::GetPathList(FVector2D StartIndex,	FVector2D EndIndex)
+{
+	//create an out parameter for the pathlist
+	TArray<FVector2D> OutPathList;
+
+	//check if a path exist
+	bool bPathExist;
 	bPathExist = CalculatePathList(OutPathList, StartIndex, EndIndex, false);
 
 	if (bPathExist)
 	{
-		return OutPathList;
+		return OutPathList; //return pathlist if path exist
 	}
 	else
 	{
-		return TArray<FVector2D>();
+		return TArray<FVector2D>(); //return empty array if path does not exist
 	}
 }
 
+
+///***********************************************************************************************************///
+///                              THE MAIN A* PATHFINDING ALGORITHM
+///***********************************************************************************************************////
 bool UA_Pathfinding::CalculatePathList(TArray<FVector2D>& OutPathList, const FVector2D& StartIndex, const FVector2D& EndIndex, bool bIsThisACheckOnly)
 {
 	///Making sure that the OutPathList is empty
@@ -121,7 +196,7 @@ bool UA_Pathfinding::CalculatePathList(TArray<FVector2D>& OutPathList, const FVe
 	int32 LoopCounter = 0;
 
 
-	///Loop Till OpenedList is not Empty
+	///Loop Till OpenedList is not Empty (CHECK TILL ALL POSSIBLE NODES CHECKED)
 	while (OpenedList.Num() > 0 && LoopCounter < 50)
 	{
 		///Check if the TempNode is the TargetNode (To save unnecessary interations)
@@ -146,10 +221,10 @@ bool UA_Pathfinding::CalculatePathList(TArray<FVector2D>& OutPathList, const FVe
 			int32 Y = ClosedList[ClosedList.Num() - 1]->CurrentMapNode.Y;
 
 			///Searching the Valid Neighbours for Least FCost
-			for (int32 Counter = 0; Counter < NeighbourList.Num(); Counter++)
+			for (int32 Counter = 0; Counter < NeighbourOffsetList.Num(); Counter++)
 			{
-				CheckingNodeVector.X = X + NeighbourList[Counter].X;
-				CheckingNodeVector.Y = Y + NeighbourList[Counter].Y;
+				CheckingNodeVector.X = X + NeighbourOffsetList[Counter].X;
+				CheckingNodeVector.Y = Y + NeighbourOffsetList[Counter].Y;
 
 				///Checking boundary conditions
 				if (CheckBoundary(CheckingNodeVector))
@@ -220,6 +295,9 @@ bool UA_Pathfinding::CalculatePathList(TArray<FVector2D>& OutPathList, const FVe
 	return false;
 }
 
+///***********************************************************************************************************///
+///                        FUNCTION TO CHECK THE MAP BOUNDARY CONDITIONS
+///***********************************************************************************************************////
 bool UA_Pathfinding::CheckBoundary(FVector2D &TempVector) const
 {
 	bool bIsNodeInsideMap = TempVector.X >= 0 &&
@@ -230,6 +308,9 @@ bool UA_Pathfinding::CheckBoundary(FVector2D &TempVector) const
 	return bIsNodeInsideMap;
 }
 
+///***********************************************************************************************************///
+///                       MAKES THE PATH FROM THE PASSED LINKED LIST
+///***********************************************************************************************************////
 TArray<FVector2D> UA_Pathfinding::MakePathList(PathNode* FinalPathNode)
 {
 	TArray<FVector2D> OutputList;
@@ -242,35 +323,6 @@ TArray<FVector2D> UA_Pathfinding::MakePathList(PathNode* FinalPathNode)
 	}
 
 	return OutputList;
-}
-
-bool UA_Pathfinding::PathExist(FVector2D StartIndex)
-{
-	//Variable to discard
-	TArray<FVector2D> OutPathList;
-
-	bool bPathExist = false;
-
-	for (FVector2D& Node : NeighbourList)
-	{
-		FVector2D CheckingNode = StartIndex + Node;
-		bool bIsNodeInsideMap = CheckBoundary(CheckingNode);
-		UE_LOG(LogTemp, Warning, TEXT(""));
-		if (bIsNodeInsideMap)
-		{
-			bool IsCheckNodeWalkable = UMapClass::IsMapNodeWalkable(CheckingNode.X, CheckingNode.Y);
-			if (IsCheckNodeWalkable)
-			{
-				bool bIsPathAvailable = CalculatePathList(OutPathList, CheckingNode);
-				if (!bIsPathAvailable)
-				{
-					return false;
-				}
-			}
-		}
-	}
-
-	return true;
 }
 
 #pragma endregion

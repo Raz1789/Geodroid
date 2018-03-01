@@ -2,29 +2,39 @@
 
 #pragma once
 
+// UNREAL HEADER FILES
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
+
+// MANDATE FILES
 #include "NodeViewerActor.generated.h"
+
+/*****************************************************************************************************************
+* CLASS NAME:	ANODEVIEWERACTOR
+* DESCRIPTION:	Just a dummy Actor for visualizing the Nodes centers in the world
+*****************************************************************************************************************/
 
 UCLASS()
 class GEODROID_API ANodeViewerActor : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	ANodeViewerActor();
-
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER VARIABLE
+	///***********************************************************************************************************///
+
+	///-------------------------------------- MESH VARIABLE ------------------------------------------------------///
+	UPROPERTY(EditAnywhere, Category = "Visualization Mesh")
+		USphereComponent* SphereMesh;
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	///***********************************************************************************************************///
+	///                                       PUBLIC MEMBER FUNCTIONS
+	///***********************************************************************************************************///
 
-	UPROPERTY(EditAnywhere, Category = "Required Fields")
-	USphereComponent* SphereMesh;
+	///-------------------------------------- CONSTRUCTOR --------------------------------------------------------///S	
+	ANodeViewerActor();
 	
 };

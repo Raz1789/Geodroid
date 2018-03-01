@@ -97,9 +97,11 @@ void ATurret::SearchForEnemy()
 	//Pointer Protection
 	if (!World) return;
 
-	///----------- Checking for enemies inside of the influence circle -------------------------------///
+	/// Checking for enemies inside of the influence circle
 	FCollisionObjectQueryParams ObjectParams;
-	ObjectParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3); ///ECC_GameTraceChannel3 => Enemy Trace Channel
+
+	///SWEEP ECC_GameTraceChannel3 => Enemy Trace Channel
+	ObjectParams.AddObjectTypesToQuery(ECollisionChannel::ECC_GameTraceChannel3);
 
 	///Sweep for Multiple enemies in Enemy Trace Channel
 	bHasSweepHitAnyObject = World->SweepMultiByObjectType(OutHits,

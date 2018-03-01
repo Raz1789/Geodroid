@@ -5,6 +5,10 @@
 #include "MapClass.h"
 #include "A_Pathfinding.generated.h"
 
+/*****************************************************************************************************************
+* CLASS NAME:	UA_PATHFINDING
+* DESCRIPTION:	This is the games major A* Pathfinding Algorithm
+*****************************************************************************************************************/
 UCLASS()
 class UA_Pathfinding : public UObject
 {
@@ -12,10 +16,19 @@ class UA_Pathfinding : public UObject
 
 private:
 
+	///***********************************************************************************************************///
+	///                                       PRIVATE MEMBER VARIABLE
+	///***********************************************************************************************************///
+
+	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
 	//Size of the GameMode Map
 	FVector2D MapMaxSize;
 
-	//A Linked List
+	//List of index subtractors for finding the neighbours
+	TArray<FVector2D> NeighbourOffsetList;
+
+	///-------------------------------------- HELPER STRUCTURE ---------------------------------------------------///
+	//A Path Node LINKED LIST
 	struct PathNode
 	{
 		///MEMBER VARIABLE
@@ -41,26 +54,36 @@ private:
 		~PathNode();
 	};
 
-	//List of index subtractors for finding the neighbours
-	TArray<FVector2D> NeighbourList;
+	///***********************************************************************************************************///
+	///                                       PRIVATE MEMBER FUNCTIONS
+	///***********************************************************************************************************///
 
-	///************************ MEMBER FUNCTION **********************///
+	///-------------------------------------- CLASS FUNCTIONS -------------------------------------------------///
+
+	//The main A* Algorithm
 	bool CalculatePathList(TArray<FVector2D>& OutPathList, const FVector2D& StartIndex, const FVector2D& EndIndex = UMapClass::GetTargetNode().NodeIndex, bool bIsThisACheckOnly = true);
 
+	//Boundary checking function
 	bool CheckBoundary(FVector2D &TempVector) const;
 
 	//Make PathList from the PathNode LinkedList
 	TArray<FVector2D> MakePathList(PathNode* FinalPathNode);
-	//TODO check if change from public to private has caused any issues
 
 public:
 
+	///***********************************************************************************************************///
+	///                                       PUBLIC MEMBER FUNCTIONS
+	///***********************************************************************************************************///
+
+	///-------------------------------------- CONSTRUCTOR --------------------------------------------------------///
 	//Constructor for UA_Pathfinding
 	UA_Pathfinding();
 
-	//Calculate the Path
+	///---------------------------------- CLASS FUNCTIONS -----------------------------------------------------///
+	//return the path if exists
 	TArray<FVector2D> GetPathList(FVector2D StartIndex, FVector2D EndIndex = UMapClass::GetTargetNode().NodeIndex);
 
-	bool PathExist(FVector2D StartIndex);
+	//Check if the path is blocked if a structure is created
+	bool CheckPathBlocked(FVector2D StartIndex);
 
 };
