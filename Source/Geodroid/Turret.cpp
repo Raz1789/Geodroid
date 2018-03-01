@@ -7,8 +7,11 @@
 ///***********************************************************************************************************////
 ATurret::ATurret()
 {
+	///Initiate ticking
+	PrimaryActorTick.bCanEverTick = true;
+
 	///Default Initialization of Varaibles
-	BP_BuildCost = 100;
+	BP_BuildCost = 150;
 	bIsStructureWalkable = false;
 	bHasSweepHitAnyObject = false;
 	AttackRate = 1.f;
@@ -21,7 +24,7 @@ ATurret::ATurret()
 	///CollisionComponent
 	RestrictionArea = CreateDefaultSubobject<UBoxComponent>(TEXT("RestrictionArea"));
 	RestrictionArea->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
-	RestrictionArea->SetBoxExtent(FVector(200.f,200.f, 25.f));
+	RestrictionArea->SetBoxExtent(FVector(200.f, 200.f, 25.f));
 	RestrictionArea->BodyInstance.SetCollisionProfileName("BlockAll");
 	RootComponent = RestrictionArea;
 }
@@ -35,7 +38,7 @@ void ATurret::BeginPlay()
 
 	///Set Ticking true
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	///Setting World Variable
 	if (UPointerProtection::CheckAndLog(GetWorld(), "World"))
 	{
@@ -44,7 +47,7 @@ void ATurret::BeginPlay()
 
 	///Setting the Actor Location
 	ActorLocation = GetActorLocation();
-	
+
 }
 
 ///***********************************************************************************************************///
@@ -100,11 +103,11 @@ void ATurret::SearchForEnemy()
 
 	///Sweep for Multiple enemies in Enemy Trace Channel
 	bHasSweepHitAnyObject = World->SweepMultiByObjectType(OutHits,
-															   ActorLocation,
-															   ActorLocation,
-															   FQuat::Identity,
-															   ObjectParams,
-															   InfluenceSphere);
+														  ActorLocation,
+														  ActorLocation,
+														  FQuat::Identity,
+														  ObjectParams,
+														  InfluenceSphere);
 	///check if Sweep Hit an Enemy
 	if (bHasSweepHitAnyObject)
 	{
@@ -136,7 +139,7 @@ void ATurret::SearchForEnemy()
 			TargetActor = OutHits[0].GetActor();
 		}
 	}
-	
+
 }
 
 ///***********************************************************************************************************///
@@ -163,7 +166,7 @@ bool ATurret::IsEnemyInVisibleRange(const  AActor* _TargetActor)
 	CollisionParam.AddIgnoredActor(this);
 
 	FHitResult OutHit; ///Receive the first Target hit
-	
+
 	///LineTrace in the Visibility channel
 	World->LineTraceSingleByChannel(OutHit,
 									StartLocation,
@@ -199,7 +202,7 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 			/// Pointer check
 			if (UPointerProtection::CheckAndLog(ProjectileClass, "Turret ProjectileClass"))
 			{
-				
+
 				///Set Spawn Collision Handling Override
 				FActorSpawnParameters ActorSpawnParams;
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -219,9 +222,9 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 				FRotator SpawnRotation;
 				SpawnRotation = SpawnDirection.Rotation();
 
-				
+
 				AGeodroidProjectile* Projectile;
-				
+
 				/// spawn the projectile at the Barrel tip
 				Projectile = World->SpawnActor<AGeodroidProjectile>(ProjectileClass,
 																	SpawnLocation,

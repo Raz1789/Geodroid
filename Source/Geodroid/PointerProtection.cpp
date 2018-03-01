@@ -2,6 +2,11 @@
 
 #include "PointerProtection.h"
 
+///***********************************************************************************************************///
+///             CHECK IF THE POINTER PASSED IS NULL AND PRINT DEBUG MESSAGE IF IT IS NULL
+///				RETURNS TRUE IF IT IS NOT NULL
+///***********************************************************************************************************///
+//CHECK IF THE POINTER PASSED IS NULL AND PRINT DEBUG MESSAGE IF IT IS NULL (returns bool)
 bool UPointerProtection::CheckAndLog(void* Pointer, FString PointerName)
 {
 	if (Pointer)

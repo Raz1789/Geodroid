@@ -20,52 +20,54 @@ class GEODROID_API ADefenseStructures : public AActor
 	GENERATED_BODY()
 
 protected:
-	///**************************** MEMBER VARIABLES **********************************///
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER VARIABLE
+	///***********************************************************************************************************///
+	
+	///-------------------------------------- STRUCTURE DESIGN VARIABLES -----------------------------------------///
+	UPROPERTY(EditDefaultsOnly, Category = "Structure Design")
 		//Specifies if the Node on which the Structure exist is walkable or not
-		bool bIsStructureWalkable; //TODO use this variable for checking
+		bool bIsStructureWalkable;
 
-	//The Structure's Map Node Index
-	FMapNode StructureMapNode;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Structure Design")
 		//Specifies the Attack Rate in Seconds
 		float AttackRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Structure Design")
 		//Attack Damage per shot by the Structure
 		float AttackDamage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure Design")
 		//Get the Building Cost from the Blueprint
 		int32 BP_BuildCost;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-		//Stores the next Level Blueprint
-		TSubclassOf<ADefenseStructures> NextLevelStructureActor;
+	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
+	//The Structure's Map Node Index
+	FMapNode StructureMapNode;
 
 	//Check if the DefenseStructure is Activated
 	bool bIsStructureActive;
 
 
-	///**************************** MEMBER FUNCTIONS **********************************///
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER FUNCTIONS
+	///***********************************************************************************************************///
+
+	///-------------------------------------- OVERRIDE FUNCTIONS -----------------------------------------------///
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
 
-	///******** CONSTRUCTOR *******************///
+	///***********************************************************************************************************///
+	///                                       PUBLIC MEMBER FUNCTIONS
+	///***********************************************************************************************************///
 
+	///-------------------------------------- CONSTRUCTOR --------------------------------------------------------///
 	// Sets default values for this actor's properties
 	ADefenseStructures();
 
-	///*************************** MEMBER VARIABLE **********************************///
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item Design")
-		//Color of Material
-		FColor MaterialColor;
-
-	///************************** MEMBER FUNCTION **********************************///
-
+	///-------------------------------------- CLASS FUNCTIONS -----------------------------------------------///
 	//Activates the Tower
 	void ActivateTower();
 
@@ -80,8 +82,5 @@ public:
 
 	//Getter for Structure Map Node Index
 	FVector2D GetStructureMapNodeIndex();
-
-	//Getter for NextLevelStructureActor
-	TSubclassOf<ADefenseStructures> GetNextLevelStructureActor();
 
 };

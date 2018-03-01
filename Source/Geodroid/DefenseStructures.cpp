@@ -2,15 +2,11 @@
 
 #include "DefenseStructures.h"
 
-///************** MEMBER FUNCTIONS *************************///
-
 ///***********************************************************************************************************/// 
 ///                                       CONSTRUCTORS
 ///***********************************************************************************************************///
 ADefenseStructures::ADefenseStructures()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 	BP_BuildCost = 100;
 	bIsStructureActive = false;
 }
@@ -22,36 +18,43 @@ void ADefenseStructures::BeginPlay()
 {
 	Super::BeginPlay();
 	StructureMapNode = UMapClass::WorldToMapNode(GetActorLocation());
-	UE_LOG(LogTemp, Warning, TEXT("Node: %s"), *StructureMapNode.NodeIndex.ToString());
 }
 
+///***********************************************************************************************************///
+///                                       GETTTERS
+///***********************************************************************************************************///
+
+///------------------------------- GET THE BUILDING COST -----------------------------------------------------///
 int32 ADefenseStructures::GetBuildCost()
 {
 	return BP_BuildCost;
 }
 
+///--------------------------- GET THE STRUCTURE'S NODE INDEX FROM MAP ---------------------------------------///
 FVector2D ADefenseStructures::GetStructureMapNodeIndex()
 {
 	return StructureMapNode.NodeIndex;
 }
 
-TSubclassOf<ADefenseStructures> ADefenseStructures::GetNextLevelStructureActor()
-{
-	return NextLevelStructureActor;
-}
-
-void ADefenseStructures::ActivateTower()
-{
-	bIsStructureActive = true;
-}
-
+///-------------------------- GET IF THE STRUCTURE HAS BEEN ACTIVATED ----------------------------------------///
 bool ADefenseStructures::IsStructureActive()
 {
 	return bIsStructureActive;
 }
 
+///----------------------------- GET IF THE STRUCTURE IS WALKABLE --------------------------------------------///
 bool ADefenseStructures::IsStructureWalkable()
 {
 	return bIsStructureWalkable;
+}
+
+///***********************************************************************************************************///
+///                                       SETTTERS
+///***********************************************************************************************************///
+
+///---------------------------------SETTER TO ACTIVATE THE TOWER ---------------------------------------------///
+void ADefenseStructures::ActivateTower()
+{
+	bIsStructureActive = true;
 }
 

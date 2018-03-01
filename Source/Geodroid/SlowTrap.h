@@ -2,40 +2,60 @@
 
 #pragma once
 
+// UNREAL HEADER FILES
 #include "CoreMinimal.h"
+#include "Components/BoxComponent.h"
+
+// PROJECT HEADER FILES
 #include "DefenseStructures.h"
 #include "BaseEnemyClass.h"
 
-#include "Components/BoxComponent.h"
+// MANDATE FILES
 #include "SlowTrap.generated.h"
 
-/**
- * 
- */
+/*****************************************************************************************************************
+* CLASS NAME:	ASLOWTRAP
+* DESCRIPTION:	This class is a derived class from the ADefenseStructure class.
+*				This class specifies the behaviour of the Slow Trap in the game
+*				The Slow Trap slowes all enemies stepping on it
+*****************************************************************************************************************/
+
 UCLASS()
 class GEODROID_API ASlowTrap : public ADefenseStructures
 {
 	GENERATED_BODY()
 
 protected:
-	///***************** MEMBER VARIABLE *******************///
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER VARIABLE
+	///***********************************************************************************************************///
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-	//Overlap box
-	UBoxComponent* InfluenceBox;
-
+	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
 	//The World Component
 	UWorld* World;
 
-	virtual void BeginPlay() override;
+	///-------------------------------------- DESIGN VARIABLES ---------------------------------------------------///
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
+		//Overlap box
+		UBoxComponent* InfluenceBox;
+
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER FUNCTIONS
+	///***********************************************************************************************************///
+	///-------------------------------------- CLASS FUNCTIONS ----------------------------------------------------///
+	UFUNCTION()
+		void OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	UFUNCTION()
-	void OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+		void OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
-	UFUNCTION()
-	void OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
-	
 public:
+
+	///***********************************************************************************************************///
+	///                                       PUBLIC MEMBER FUNCTIONS
+	///***********************************************************************************************************///
+
+	///-------------------------------------- CONSTRUCTOR --------------------------------------------------------///
 	ASlowTrap();
-	
+
 };

@@ -2,28 +2,33 @@
 
 #include "SlowTrap.h"
 
+
+///***********************************************************************************************************///
+///                                               CONSTRUCTOR
+///***********************************************************************************************************////
 ASlowTrap::ASlowTrap() : Super()
 {
+	///Setting the Default values to design variables from Parent
 	bIsStructureWalkable = true;
-
 	BP_BuildCost = 25;
+
 
 	///Setting the InfluenceBox
 	InfluenceBox = CreateDefaultSubobject<UBoxComponent>(TEXT("InfluenceBox"));
 	RootComponent = InfluenceBox;
-	float BoxExtends = UMapClass::GetWorldNodeSize() / 2;
-	InfluenceBox->SetBoxExtent(FVector(BoxExtends));
+	float BoxExtends = UMapClass::GetWorldNodeSize() / 2 + /*OFFSET*/ 10.0f; //Setting to the size of a node + Offset
+	InfluenceBox->SetBoxExtent(FVector(BoxExtends)); 
 	InfluenceBox->bGenerateOverlapEvents = true;
 	InfluenceBox->bMultiBodyOverlap = true;
 	InfluenceBox->BodyInstance.SetCollisionProfileName("OverlapAllDynamic");
-}
 
-void ASlowTrap::BeginPlay()
-{
 	OnActorBeginOverlap.AddDynamic(this, &ASlowTrap::OnBeginOverlap);
 	OnActorEndOverlap.AddDynamic(this, &ASlowTrap::OnEndOverlap);
 }
 
+///***********************************************************************************************************///
+///                              FUNCTION CALLED WITH ENEMY ENTERS THE COLLISION BOX
+///***********************************************************************************************************///
 void ASlowTrap::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	if ((OtherActor != nullptr) && (OtherActor != this))
@@ -32,10 +37,15 @@ void ASlowTrap::OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		if (EnemyActor)
 		{
 			EnemyActor->AddSpeedEffect();
+			UE_LOG(LogTemp, Warning, TEXT("Began!!!"))
 		}
 	}
 }
 
+
+///***********************************************************************************************************///
+///                              FUNCTION CALLED WITH ENEMY EXITS THE COLLISION BOX
+///***********************************************************************************************************///
 void ASlowTrap::OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 {
 	// Other Actor is the actor that triggered the event. Check that is not ourself.  
@@ -45,6 +55,7 @@ void ASlowTrap::OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor)
 		if (EnemyActor)
 		{
 			EnemyActor->ResetSpeedEffect();
+			UE_LOG(LogTemp, Warning, TEXT("Ended!!!"))
 		}
 	}
 	

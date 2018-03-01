@@ -19,6 +19,14 @@
 // MANDATE FILES
 #include "Turret.generated.h"
 
+/*****************************************************************************************************************
+* CLASS NAME:	ATURRET
+* DESCRIPTION:	This class is a derived class from the ADefenseStructure class.
+*				This class specifies the behaviour of the Turret in the game
+*               The Turret tracks the enemy that is in the Influence Circle and shoots
+*				at the enemy only if the enemy is visible
+*****************************************************************************************************************/
+
 UCLASS()
 class GEODROID_API ATurret : public ADefenseStructures
 {
@@ -41,12 +49,12 @@ protected:
 
 	///-------------------------------------- SWEEP VARIABLES ----------------------------------------------------///
 	UPROPERTY(EditDefaultsOnly, Category = "Turret Design")
-	//Influence Circle radius value for Game Design Purposes
-	float InfluenceCircleRadius;
+		//Influence Circle radius value for Game Design Purposes
+		float InfluenceCircleRadius;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Turret Design")
-	//Inner Collision Box representing the Turret Area Restriction
-	UBoxComponent* RestrictionArea;
+		//Inner Collision Box representing the Turret Area Restriction
+		UBoxComponent* RestrictionArea;
 
 	//CollisionShape for Sweeping for enemies
 	FCollisionShape InfluenceSphere;
@@ -62,35 +70,35 @@ protected:
 	AActor* TargetActor = nullptr;
 
 	//Time from last shot was fired
-	float TimeFromLastFire; 
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Game Design")
-	//Projectile class
-	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
+	float TimeFromLastFire;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game Design")
-	/** Sound to play each time we fire */
-	class USoundBase* FireSound;
+		//Projectile class
+		TSubclassOf<class AGeodroidProjectile> ProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game Design")
+		/** Sound to play each time we fire */
+		class USoundBase* FireSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Design")
-	//Turret Rotator
-	UStaticMeshComponent* BP_Turret;
+		//Turret Rotator
+		UStaticMeshComponent* BP_Turret;
 
 	///***********************************************************************************************************///
 	///                                       PROTECTED MEMBER FUNCTIONS
 	///***********************************************************************************************************///
-	
+
 	///-------------------------------------- OVERRIDE FUNCTIONS -------------------------------------------------///
 	virtual void BeginPlay() override;
 
 	///-------------------------------------- CLASS FUNCTIONS ----------------------------------------------------///
-	UFUNCTION(BlueprintImplementableEvent, Category = "CPP Function", meta =  (DisplayName = "LookAtTargetEnemy"))
+	UFUNCTION(BlueprintImplementableEvent, Category = "CPP Function", meta = (DisplayName = "LookAtTargetEnemy"))
 		//Rotate Turret to Look at Target Enemy
 		void ReceiveLookAtTargetEnemy(const AActor* TargetEnemy);
 
 	UFUNCTION()
-	//Check if the Enemy inside the InfluenceBox is visible and take necessary action
-	void SearchForEnemy();
+		//Check if the Enemy inside the InfluenceBox is visible and take necessary action
+		void SearchForEnemy();
 
 	UFUNCTION()
 		//Shoot at Enemy
@@ -107,7 +115,7 @@ public:
 
 	///-------------------------------------- CONSTRUCTOR --------------------------------------------------------///
 	ATurret();
-	
+
 	///-------------------------------------- OVERRIDE FUNCTIONS -----------------------------------------------///
 	//Tick function
 	virtual void Tick(float DeltaTime) override;
