@@ -4,16 +4,20 @@
 
 ///************** MEMBER FUNCTIONS *************************///
 
-// Sets default values
+///***********************************************************************************************************/// 
+///                                       CONSTRUCTORS
+///***********************************************************************************************************///
 ADefenseStructures::ADefenseStructures()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	BP_BuildCost = 100;
 	bIsStructureActive = false;
 }
 
-// Called when the game starts or when spawned
+///***********************************************************************************************************///
+///                                       BEGIN PLAY FUNCTION
+///***********************************************************************************************************///
 void ADefenseStructures::BeginPlay()
 {
 	Super::BeginPlay();
@@ -36,13 +40,6 @@ TSubclassOf<ADefenseStructures> ADefenseStructures::GetNextLevelStructureActor()
 	return NextLevelStructureActor;
 }
 
-// Called every frame
-void ADefenseStructures::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void ADefenseStructures::ActivateTower()
 {
 	bIsStructureActive = true;
@@ -51,5 +48,10 @@ void ADefenseStructures::ActivateTower()
 bool ADefenseStructures::IsStructureActive()
 {
 	return bIsStructureActive;
+}
+
+bool ADefenseStructures::IsStructureWalkable()
+{
+	return bIsStructureWalkable;
 }
 

@@ -2,17 +2,21 @@
 
 #pragma once
 
+// UNREAL HEADER FILES
 #include "CoreMinimal.h"
-#include "DefenseStructures.h"
 #include "WorldCollision.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "GeodroidProjectile.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+
+// PROJECT HEADER FILES
+#include "DefenseStructures.h"
+#include "GeodroidProjectile.h"
 #include "PointerProtection.h"
-#include "DrawDebugHelpers.h"
 #include "MapClass.h"
+
+// MANDATE FILES
 #include "Turret.generated.h"
 
 UCLASS()
@@ -21,13 +25,11 @@ class GEODROID_API ATurret : public ADefenseStructures
 	GENERATED_BODY()
 
 protected:
-	///***************** MEMBER VARIABLE *******************///
-	//CollisionShape for Sweeping for enemies
-	FCollisionShape InfluenceSphere;
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER VARIABLE
+	///***********************************************************************************************************///
 
-	//Array of Enemies inside the InfluenceBox
-	TArray<FHitResult> OutHits;
-
+	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
 	//The World Component
 	UWorld* World;
 
@@ -37,55 +39,76 @@ protected:
 	//Actor Node in Map
 	FVector2D CurrentMapNode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-	//Projectile class
-	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
+	///-------------------------------------- SWEEP VARIABLES ----------------------------------------------------///
+	UPROPERTY(EditDefaultsOnly, Category = "Turret Design")
+	//Influence Circle radius value for Game Design Purposes
+	float InfluenceCircleRadius;
 
-	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		class USoundBase* FireSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Turret Design")
+	//Inner Collision Box representing the Turret Area Restriction
+	UBoxComponent* RestrictionArea;
 
+	//CollisionShape for Sweeping for enemies
+	FCollisionShape InfluenceSphere;
+
+	//Array of Enemies inside the InfluenceBox
+	TArray<FHitResult> OutHits;
+
+	//Has the sweep Hit any objects
+	bool bHasSweepHitAnyObject;
+
+	///-------------------------------------- FIRING VARIABLE ----------------------------------------------------///
 	//Stores the Target Actor
 	AActor* TargetActor = nullptr;
 
 	//Time from last shot was fired
-	float TimeFromLastFire;
+	float TimeFromLastFire; 
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Game Design")
+	//Projectile class
+	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Turret Rotator
-		UStaticMeshComponent* BP_Turret;
+	UPROPERTY(EditDefaultsOnly, Category = "Game Design")
+	/** Sound to play each time we fire */
+	class USoundBase* FireSound;
 
-	///***************** MEMBER FUNCTION ************************///
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Design")
+	//Turret Rotator
+	UStaticMeshComponent* BP_Turret;
+
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER FUNCTIONS
+	///***********************************************************************************************************///
+	
+	///-------------------------------------- OVERRIDE FUNCTIONS -------------------------------------------------///
 	virtual void BeginPlay() override;
 
+	///-------------------------------------- CLASS FUNCTIONS ----------------------------------------------------///
 	UFUNCTION(BlueprintImplementableEvent, Category = "CPP Function", meta =  (DisplayName = "LookAtTargetEnemy"))
 		//Rotate Turret to Look at Target Enemy
 		void ReceiveLookAtTargetEnemy(const AActor* TargetEnemy);
 
 	UFUNCTION()
 	//Check if the Enemy inside the InfluenceBox is visible and take necessary action
-	void CheckAndExecuteAttack();
+	void SearchForEnemy();
 
 	UFUNCTION()
 		//Shoot at Enemy
 		void ShootAtEnemy(const  AActor* TargetEnemy);
+
 	UFUNCTION()
-		bool IsPlayerInVisibleRange(const  AActor* TargetEnemy);
+		bool IsEnemyInVisibleRange(const  AActor* TargetEnemy);
 
 public:
-	///*************** CONSTRUCTOR *************************************///
+
+	///***********************************************************************************************************///
+	///                                       PUBLIC MEMBER FUNCTIONS
+	///***********************************************************************************************************///
+
+	///-------------------------------------- CONSTRUCTOR --------------------------------------------------------///
 	ATurret();
-
-	///***************** MEMBER VARIABLE *****************************///
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret Design")
-	//Influence Circle radius value for Game Design Purposes
-	float InfluenceCircleRadius;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-	//Inner Collision Box representing the Turret Area Restriction
-	UBoxComponent* RestrictionArea;
 	
-	///**************** MEMBER FUNCTION ******************************///
+	///-------------------------------------- OVERRIDE FUNCTIONS -----------------------------------------------///
 	//Tick function
 	virtual void Tick(float DeltaTime) override;
 };

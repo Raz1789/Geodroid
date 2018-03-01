@@ -2,74 +2,62 @@
 
 #pragma once
 
+// UNREAL HEADER FILES
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SphereComponent.h"
+
+// PROJECT HEADER FILES
 #include "MapClass.h"
 #include "MapNode.h"
-#include "Components/SphereComponent.h"
-#include "DefenseStructures.generated.h"
 
-UENUM()
-enum class ELevel : uint8
-{
-	Level1,
-	Level2,
-	Level3
-};
+// MANDATE FILES
+#include "DefenseStructures.generated.h"
 
 UCLASS()
 class GEODROID_API ADefenseStructures : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-	///******** CONSTRUCTOR *******************///
-
-	// Sets default values for this actor's properties
-	ADefenseStructures();
 
 protected:
 	///**************************** MEMBER VARIABLES **********************************///
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-	//Specifies if the Node on which the Structure exist is walkable or not
-	bool bIsStructureWalkable; //TODO use this variable for checking
+		//Specifies if the Node on which the Structure exist is walkable or not
+		bool bIsStructureWalkable; //TODO use this variable for checking
 
 	//The Structure's Map Node Index
 	FMapNode StructureMapNode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-	//Specifies the Attack Rate in Seconds
-	float AttackRate;
+		//Specifies the Attack Rate in Seconds
+		float AttackRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-	//Attack Damage per shot by the Structure
-	float AttackDamage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-	//Current level of the DefenseStructure
-	ELevel CurrentLevelOfStructure;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-	//Limit to the upgrade of this structure
-	ELevel BuildLevelLimit;
+		//Attack Damage per shot by the Structure
+		float AttackDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
 		//Get the Building Cost from the Blueprint
 		int32 BP_BuildCost;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Design")
-	//Stores the next Level Blueprint
-	TSubclassOf<ADefenseStructures> NextLevelStructureActor;
+		//Stores the next Level Blueprint
+		TSubclassOf<ADefenseStructures> NextLevelStructureActor;
 
 	//Check if the DefenseStructure is Activated
 	bool bIsStructureActive;
 
-	
+
 	///**************************** MEMBER FUNCTIONS **********************************///
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
+
+	///******** CONSTRUCTOR *******************///
+
+	// Sets default values for this actor's properties
+	ADefenseStructures();
 
 	///*************************** MEMBER VARIABLE **********************************///
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Item Design")
@@ -77,9 +65,6 @@ public:
 		FColor MaterialColor;
 
 	///************************** MEMBER FUNCTION **********************************///
-
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 	//Activates the Tower
 	void ActivateTower();
@@ -97,6 +82,6 @@ public:
 	FVector2D GetStructureMapNodeIndex();
 
 	//Getter for NextLevelStructureActor
-	TSubclassOf<ADefenseStructures> GetNextLevelStructureActor();	
-	
+	TSubclassOf<ADefenseStructures> GetNextLevelStructureActor();
+
 };

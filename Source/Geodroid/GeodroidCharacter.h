@@ -23,6 +23,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
+
 #include "GeodroidCharacter.generated.h"
 
 UENUM()
@@ -214,8 +215,6 @@ protected:
 	TArray<ADefenseStructures*> DefenseStructuesSpawnList;
 
 	///**************** MEMBER FUNCTIONS ************************///
-	//Ticks every Frame
-	virtual void Tick(float DeltaTime) override;
 
 	//Function to check feasibility of Construction of Defense Structure
 	void StructurePlacement();

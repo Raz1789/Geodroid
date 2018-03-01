@@ -58,6 +58,7 @@ protected:
 	//Game Setting to quit
 	bool bGameQuitting;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Design|Flame")
 	//Eternal Flame Health
 	int32 EternalFlameHealth;
 

@@ -78,7 +78,7 @@ AGeodroidCharacter::AGeodroidCharacter()
 	PlayerMaxHealth = 100.f;
 	AttackDamage = 1.0f;
 	CrossHairLocation = FVector2D(0.5f, 0.5f);
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	///Defense Structure Related variable initialization
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
@@ -124,11 +124,6 @@ void AGeodroidCharacter::BeginPlay()
 		PlayerHUD = Cast<AGeodroidHUD>(PlayerController->GetHUD());
 	}
 
-}
-
-void AGeodroidCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 
@@ -377,8 +372,10 @@ void AGeodroidCharacter::StructurePlacement()
 			bool bIsStructureOnNode = UMapClass::IsStructureOnNode(FloorNodeIndex.X, FloorNodeIndex.Y);
 			if (bIsFloorNodeWalkable && !bIsStructureOnNode)
 			{
-				///Checking that character is not on the SpawnLocation
-				if (CharacterMapNode.NodeIndex.X != FloorNodeIndex.X && CharacterMapNode.NodeIndex.Y != FloorNodeIndex.Y)
+				CharacterMapNode = UMapClass::WorldToMapNode(GetActorLocation());
+
+				///Checking that character is not standing on the SpawnLocation
+				if (CharacterMapNode.NodeIndex.X != FloorNodeIndex.X || CharacterMapNode.NodeIndex.Y != FloorNodeIndex.Y)
 				{
 					if ((uint8)(SelectedDefenseStructure) == 0)
 					{
@@ -413,7 +410,7 @@ void AGeodroidCharacter::StructurePlacement()
 			}
 			else
 			{
-				PlayerHUD->ReceivePopUpMessage("That is not a walkable node");
+				PlayerHUD->ReceivePopUpMessage("That is not a Constructable node");
 			}
 		}
 		else
