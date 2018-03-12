@@ -2,20 +2,11 @@
 
 #pragma once
 
+// UNREAL HEADER FILES
 #include "CoreMinimal.h"
-#include <algorithm>
-#include "GeodroidProjectile.h"
-#include "MapNode.h"
-#include "MapClass.h"
-#include "Engine/World.h"
-#include "NodeViewerActor.h"
-#include "A_Pathfinding.h"
 #include "GameFramework/Character.h"
-#include "GeodroidHUD.h"
 #include "Animation/AnimInstance.h"
-#include "PointerProtection.h"
 #include "Camera/CameraComponent.h"
-#include "DefenseStructures.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
@@ -24,8 +15,24 @@
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 
+//CPP HEADER FILES
+#include <algorithm>
+
+// PROJECT HEADER FILES
+#include "GeodroidProjectile.h"
+#include "MapNode.h"
+#include "MapClass.h"
+#include "Engine/World.h"
+#include "NodeViewerActor.h"
+#include "A_Pathfinding.h"
+#include "GeodroidHUD.h"
+#include "PointerProtection.h"
+#include "DefenseStructures.h"
+
+// MANDATE FILES
 #include "GeodroidCharacter.generated.h"
 
+//SELECT THE DEFENSE STRUCTURE FOR SPAWNING
 UENUM()
 enum class ESelectDefenseStructure : uint8
 {
@@ -35,11 +42,17 @@ enum class ESelectDefenseStructure : uint8
 
 class UInputComponent;
 
+/*****************************************************************************************************************
+* CLASS NAME:	AGEODROIDCHARACTER
+* DESCRIPTION:	Class describing the behaviour of the character
+*****************************************************************************************************************/
 UCLASS(config=Game)
 class AGeodroidCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+
+#pragma region NON MODIFIED VARIABLES AND FUNCTIONS
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	class USkeletalMeshComponent* Mesh1P;
@@ -73,12 +86,9 @@ class AGeodroidCharacter : public ACharacter
 	class UMotionControllerComponent* L_MotionController;
 
 public:
+	//Constructor
 	AGeodroidCharacter();
 
-protected:
-	virtual void BeginPlay();
-	
-public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -109,6 +119,7 @@ public:
 
 protected:
 
+	virtual void BeginPlay();
 	/** Fires a projectile. */
 	void OnFire();
 
@@ -159,11 +170,14 @@ protected:
 	 */
 	bool EnableTouchscreenMovement(UInputComponent* InputComponent);
 
-	//Health of the player
-	float PlayerHealth;
-	
-	//Is player Dead
-	bool bIsPlayerDead;
+#pragma endregion
+
+protected:
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER VARIABLE
+	///***********************************************************************************************************///
+
+	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
 
 	//World pointer
 	UWorld* World;
@@ -173,24 +187,45 @@ protected:
 
 	//The Player HUD
 	AGeodroidHUD* PlayerHUD;
+	
+	///-------------------------------------- PLAYER STATUS VARIABLES ---------------------------------------------///
+	//Health of the player
+	float PlayerHealth;
+	
+	//Is player Dead
+	bool bIsPlayerDead;
 
+	//The Node in which the character is standing
+	FMapNode CharacterMapNode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
+		//Amount of gold player has.
+		int32 PlayerGold;
+
+	UPROPERTY(EditDefaultsOnly, Category = "debug")
+		TSubclassOf<ANodeViewerActor> NodeViewerClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
+		float PlayerMaxHealth;
+
+	///-------------------------------------- GAME MODE VARIABLES ---------------------------------------------///
 	//Start Wave Variable
 	bool bShouldWaveStart;
 
 	//If GameMode is ready to StartWave
 	bool bIsGameModeReady;
 
-	//The Node in which the character is standing
-	FMapNode CharacterMapNode;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
-	//Amount of gold player has.
-	int32 PlayerGold;
-
+	///-------------------------------------- FIRING VARIABLES ---------------------------------------------///
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
 	//Attack Damage per shot from the player
 	float AttackDamage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
+		//CrossHair Location in Range 0 - 1 : Default (0.5,0.5)
+		FVector2D CrossHairLocation;
+
+	///-------------------------------------- STRUCTURE VARIABLES ---------------------------------------------///
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
 	//Defense structure that is selected
 	ESelectDefenseStructure SelectedDefenseStructure;
@@ -198,10 +233,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
 	//Structure Construction range
 	float StructureConstructionRange;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | StructureConstruction")
-	//CrossHair Location in Range 0 - 1 : Default (0.5,0.5)
-	FVector2D CrossHairLocation;
 
 	///Variable for construction purposes
 	//bool to store if the Construction of Defense Structure feasible
@@ -214,7 +245,11 @@ protected:
 	//TArray containing all the Defense Structures
 	TArray<ADefenseStructures*> DefenseStructuesSpawnList;
 
-	///**************** MEMBER FUNCTIONS ************************///
+	///***********************************************************************************************************///
+	///                                       PROTECTED MEMBER FUNCTION
+	///***********************************************************************************************************///
+
+	///-------------------------------------- CLASS FUNCTIONS ---------------------------------------------------///
 
 	//Function to check feasibility of Construction of Defense Structure
 	void StructurePlacement();
@@ -255,14 +290,14 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
-	//TODO: Remove after testing
+	///***********************************************************************************************************///
+	///                                       PUBLIC MEMBER FUNCTION
+	///***********************************************************************************************************///
+
+	///-------------------------------------- CLASS FUNCTIONS ---------------------------------------------------///
+
+	//DEBUG FUNCTION
 	void DebugFunction();
-
-	UPROPERTY(EditDefaultsOnly, Category = "debug")
-	TSubclassOf<ANodeViewerActor> NodeViewerClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game Design | Basic")
-	float PlayerMaxHealth;
 
 	//Function used to add resources from the Enemies
 	void AddGold(int32 AmountToBeReceived);
@@ -292,10 +327,13 @@ public:
 	void SetIsGameModeReady();
 	void ResetIsGameModeReady();
 
-
 	UFUNCTION(BlueprintCallable, Category = "CPP Functions")
 		//Function to activate if the Player is hit
-		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+		void OnHit(UPrimitiveComponent* HitComp, 
+				   AActor* OtherActor, 
+				   UPrimitiveComponent* OtherComp, 
+				   FVector NormalImpulse, 
+				   const FHitResult& Hit);
 
 };
 

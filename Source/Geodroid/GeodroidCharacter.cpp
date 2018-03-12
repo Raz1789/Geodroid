@@ -7,6 +7,9 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 //////////////////////////////////////////////////////////////////////////
 // AGeodroidCharacter
 
+///***********************************************************************************************************///
+///                                               CONSTRUCTOR
+///***********************************************************************************************************////
 AGeodroidCharacter::AGeodroidCharacter()
 {
 	// Set size for collision capsule
@@ -73,6 +76,7 @@ AGeodroidCharacter::AGeodroidCharacter()
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
 
+	/***********************************************************************************************************/
 	///MODIFIED AFTER THIS POINT FROM THE ORIGINAL TEMPLATE
 	PlayerGold = 100;
 	PlayerMaxHealth = 100.f;
@@ -86,6 +90,9 @@ AGeodroidCharacter::AGeodroidCharacter()
 	
 }
 
+///***********************************************************************************************************///
+///                                               BEGIN PLAY FUNCTIONS
+///***********************************************************************************************************////
 void AGeodroidCharacter::BeginPlay()
 {
 	// Call the base class  
@@ -106,6 +113,9 @@ void AGeodroidCharacter::BeginPlay()
 		Mesh1P->SetHiddenInGame(false, true);
 	}
 
+	/***********************************************************************************************************/
+	///MODIFIED AFTER THIS POINT FROM THE ORIGINAL TEMPLATE
+	//set from the Blueprint
 	PlayerHealth = PlayerMaxHealth;
 
 
@@ -124,6 +134,10 @@ void AGeodroidCharacter::BeginPlay()
 		PlayerHUD = Cast<AGeodroidHUD>(PlayerController->GetHUD());
 	}
 
+	if (UMapClass::IsDebugOn())
+	{
+		DebugFunction();
+	}
 }
 
 
@@ -131,6 +145,9 @@ void AGeodroidCharacter::BeginPlay()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
+///***********************************************************************************************************///
+///                                               SET INPUT
+///***********************************************************************************************************////
 void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// set up gameplay key bindings
@@ -160,6 +177,9 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AGeodroidCharacter::LookUpAtRate);
 	
+
+	/***********************************************************************************************************/
+	///MODIFIED AFTER THIS POINT FROM THE ORIGINAL TEMPLATE
 	//Defense Structure Related Inputs
 	PlayerInputComponent->BindAction("SelectTurret", IE_Pressed, this, &AGeodroidCharacter::SelectTurretForConstruction);
 	PlayerInputComponent->BindAction("SelectTrap", IE_Pressed, this, &AGeodroidCharacter::SelectTrapForConstruction);
@@ -169,6 +189,10 @@ void AGeodroidCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	//Wave Related Inputs
 	PlayerInputComponent->BindAction("StartWave", IE_Pressed, this, &AGeodroidCharacter::StartWave);
 }
+
+/*********************** FUNCTIONS THAT ARE NOT MODIFIED ***************************************************/
+
+#pragma region FPS TEMPLATE FUNCTION
 
 void AGeodroidCharacter::OnFire()
 {
@@ -344,6 +368,13 @@ bool AGeodroidCharacter::EnableTouchscreenMovement(class UInputComponent* Player
 	return false;
 }
 
+#pragma endregion
+
+/***********************************************************************************************************/
+
+///***********************************************************************************************************///
+///                           EVENT DRIVEN: PLACE THE STRUCTURE
+///***********************************************************************************************************////
 void AGeodroidCharacter::StructurePlacement()
 {
 	///Pointer Protection
@@ -370,12 +401,15 @@ void AGeodroidCharacter::StructurePlacement()
 			///Check if FloorNode isWalkable
 			bool bIsFloorNodeWalkable = UMapClass::IsMapNodeWalkable(FloorNodeIndex.X, FloorNodeIndex.Y);
 			bool bIsStructureOnNode = UMapClass::IsStructureOnNode(FloorNodeIndex.X, FloorNodeIndex.Y);
+
+
 			if (bIsFloorNodeWalkable && !bIsStructureOnNode)
 			{
 				CharacterMapNode = UMapClass::WorldToMapNode(GetActorLocation());
 
 				///Checking that character is not standing on the SpawnLocation
-				if (CharacterMapNode.NodeIndex.X != FloorNodeIndex.X || CharacterMapNode.NodeIndex.Y != FloorNodeIndex.Y)
+				if (CharacterMapNode.NodeIndex.X != FloorNodeIndex.X 
+					|| CharacterMapNode.NodeIndex.Y != FloorNodeIndex.Y)
 				{
 					if ((uint8)(SelectedDefenseStructure) == 0)
 					{
@@ -430,6 +464,9 @@ void AGeodroidCharacter::StructurePlacement()
 
 }
 
+///***********************************************************************************************************///
+///                            SPAWN STRUCTURE
+///***********************************************************************************************************////
 void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &FloorPosition)
 {
 	///Create New Structure and assign to SpawnedStructure;
@@ -440,6 +477,7 @@ void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &Floo
 		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		ActorSpawnParams.Instigator = this;
 
+		//Add the structure to the SpawnList
 		DefenseStructuesSpawnList.Add(World->SpawnActor<ADefenseStructures>(
 			DefenseStructuresClasses[(uint8)(SelectedDefenseStructure)],
 			FloorPosition,
@@ -450,7 +488,7 @@ void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &Floo
 
 		int32 BuildCost = TempDefenseStructurePointer->GetBuildCost();
 
-		UE_LOG(LogTemp, Warning, TEXT("Building Cost: %d"), BuildCost);
+		//Check if player has sufficient Gold to construct the structure
 		if (SubtractGold(BuildCost))
 		{
 			if (TempDefenseStructurePointer)
@@ -487,41 +525,25 @@ void AGeodroidCharacter::SpawnStructure(FVector2D &FloorNodeIndex, FVector &Floo
 	
 }
 
-void AGeodroidCharacter::DestroyStructure(ADefenseStructures* Structure)
-{
-	//Pointer Protection
-	if (!World) return;
-	if (!PlayerHUD) return;
-
-	if (Structure)
-	{
-		int32 GoldReimbursed = Structure->GetBuildCost() * 0.75f;
-		AddGold(GoldReimbursed);
-		FString Message = "You got back " + FString::FromInt(GoldReimbursed) + "Gold";
-		PlayerHUD->ReceivePopUpMessage(Message);
-		FVector2D StructureMapnodeIndex = Structure->GetStructureMapNodeIndex();
-		UMapClass::SetMapNodeWalkable(StructureMapnodeIndex.X,
-									  StructureMapnodeIndex.Y,
-									  true);
-		UMapClass::SetStructureOnNode(StructureMapnodeIndex.X,
-									  StructureMapnodeIndex.Y,
-									  false);
-
-		DefenseStructuesSpawnList.Remove(Structure);
-		World->DestroyActor(Structure);
-	}
-}
-
+///***********************************************************************************************************///
+///                            EVENT DRIVEN: SELECT TURRET
+///***********************************************************************************************************////
 void AGeodroidCharacter::SelectTurretForConstruction()
 {
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Turret;
 }
 
+///***********************************************************************************************************///
+///                            EVENT DRIVEN: SELECT TRAP
+///***********************************************************************************************************////
 void AGeodroidCharacter::SelectTrapForConstruction()
 {
 	SelectedDefenseStructure = ESelectDefenseStructure::ESDS_Trap;
 }
 
+///***********************************************************************************************************///
+///                            EVENT DRIVEN: INITIATE DESTROY
+///***********************************************************************************************************////
 void AGeodroidCharacter::DestroyInit()
 {
 	//TODO: Need to give some money back
@@ -537,38 +559,52 @@ void AGeodroidCharacter::DestroyInit()
 
 }
 
-void AGeodroidCharacter::DebugFunction()
+///***********************************************************************************************************///
+///                            DESTROY STRUCTURE
+///***********************************************************************************************************////
+void AGeodroidCharacter::DestroyStructure(ADefenseStructures* Structure)
 {
 	//Pointer Protection
 	if (!World) return;
+	if (!PlayerHUD) return;
 
-	if (UPointerProtection::CheckAndLog(NodeViewerClass, "NodeViewerClass"))
+	//Null check
+	if (Structure)
 	{
-		//Get the Map's Max Size
-		FVector2D MapMaxSize = UMapClass::GetMapMaxSize();
-		//Iterate through each Node
-		for (int32 X = 0; X < MapMaxSize.X; X++)
-		{
-			for (int32 Y = 0; Y < MapMaxSize.Y; Y++)
-			{
-				//Ask Gamemode for the position of the Node
-				FVector position = UMapClass::GetMapNodePosition(X, Y);
-				position.Z = 100.f;
+		///Gold to be reimbursed
+		int32 GoldReimbursed = Structure->GetBuildCost() * 0.75f;
+		AddGold(GoldReimbursed);
+		FString Message = "You got back " + FString::FromInt(GoldReimbursed) + "Gold";
+		PlayerHUD->ReceivePopUpMessage(Message);
 
-				//Spawn the actor at that location
-				FActorSpawnParameters SpawnParams;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				ANodeViewerActor* NodeViewer = World->SpawnActor<ANodeViewerActor>(NodeViewerClass, position, FRotator(0.f), SpawnParams);
-			}
-		}
+		///Update the MapNode details
+		FVector2D StructureMapnodeIndex = Structure->GetStructureMapNodeIndex();
+		UMapClass::SetMapNodeWalkable(StructureMapnodeIndex.X,
+									  StructureMapnodeIndex.Y,
+									  true);
+		UMapClass::SetStructureOnNode(StructureMapnodeIndex.X,
+									  StructureMapnodeIndex.Y,
+									  false);
+
+		//Remove from StructureList
+		DefenseStructuesSpawnList.Remove(Structure);
+
+		//Destroy Actor
+		World->DestroyActor(Structure);
 	}
 }
 
+///***********************************************************************************************************///
+///                            ADD GOLD
+///***********************************************************************************************************////
 void AGeodroidCharacter::AddGold(int32 AmountReceived)
 {
 	PlayerGold += AmountReceived;
 }
 
+///***********************************************************************************************************///
+///                            SUBTRACT THE GOLD
+///***********************************************************************************************************////
 bool AGeodroidCharacter::SubtractGold(int32 AmountToBeDeducted)
 {
 	if (AmountToBeDeducted > PlayerGold)
@@ -582,16 +618,27 @@ bool AGeodroidCharacter::SubtractGold(int32 AmountToBeDeducted)
 	}
 }
 
+///***********************************************************************************************************///
+///                            RETURN PLAYER GOLD
+///***********************************************************************************************************////
 int32 AGeodroidCharacter::GetPlayerGold() const
 {
 	return PlayerGold;
 }
 
+
+///***********************************************************************************************************///
+///                            GET THE PLAYER HEALTH
+///***********************************************************************************************************////
 float AGeodroidCharacter::GetPlayerHealth() const
 {
 	return PlayerHealth / PlayerMaxHealth;
 }
 
+
+///***********************************************************************************************************///
+///                            APPLY DAMAGE
+///***********************************************************************************************************////
 void AGeodroidCharacter::ApplyDamage(float Damage)
 {
 	PlayerHealth = std::max(0.0f, PlayerHealth - Damage);
@@ -602,12 +649,23 @@ void AGeodroidCharacter::ApplyDamage(float Damage)
 	}
 }
 
+///***********************************************************************************************************///
+///                            CHECK IF PLAYER DEAD
+///***********************************************************************************************************////
 bool AGeodroidCharacter::IsPlayerDead()
 {
 	return bIsPlayerDead;
 }
 
-void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
+
+///***********************************************************************************************************///
+///                            COLLISION FUNCTION FOR DAMAGE CALCULATION
+///***********************************************************************************************************////
+void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp,
+							   AActor * OtherActor,
+							   UPrimitiveComponent * OtherComp, 
+							   FVector NormalImpulse, 
+							   const FHitResult & Hit)
 {
 	//Pointer Protection
 	if (!PlayerHUD) return;
@@ -625,6 +683,10 @@ void AGeodroidCharacter::OnHit(UPrimitiveComponent * HitComp, AActor * OtherActo
 	}
 }
 
+
+///***********************************************************************************************************///
+///                           CHECK IF FLOOR VISIBLE
+///***********************************************************************************************************////
 bool AGeodroidCharacter::VisibilityCheck(const  AActor* TargetActor)
 { 
 	//Pointer Protection
@@ -657,6 +719,10 @@ bool AGeodroidCharacter::VisibilityCheck(const  AActor* TargetActor)
 	return false;
 }
 
+
+///***********************************************************************************************************///
+///                           LINE TRACE TO DESTROY STRUCTURES
+///***********************************************************************************************************////
 AActor * AGeodroidCharacter::LineTraceForward()
 {
 	//Pointer Protection
@@ -684,6 +750,10 @@ AActor * AGeodroidCharacter::LineTraceForward()
 	return OutHit.GetActor();
 }
 
+
+///***********************************************************************************************************///
+///                            LINE TRACE FOR FLOOR
+///***********************************************************************************************************////
 AActor* AGeodroidCharacter::FloorCheck()
 {
 	//Pointer Protection
@@ -718,6 +788,10 @@ AActor* AGeodroidCharacter::FloorCheck()
 	return OutHit.GetActor();
 }
 
+
+///***********************************************************************************************************///
+///                           SET START WAVE
+///***********************************************************************************************************////
 void AGeodroidCharacter::StartWave()
 {
 	if (bIsGameModeReady)
@@ -726,26 +800,45 @@ void AGeodroidCharacter::StartWave()
 	}
 }
 
+
+///***********************************************************************************************************///
+///                            RETURN FLAG TO START WAVE
+///***********************************************************************************************************////
 bool AGeodroidCharacter::ShouldWaveStart()
 {
 	return bShouldWaveStart;
 }
 
+
+///***********************************************************************************************************///
+///                            RESET START WAVE FLAG
+///***********************************************************************************************************////
 void AGeodroidCharacter::ResetStartWave()
 {
 	bShouldWaveStart = false;
 }
 
+
+///***********************************************************************************************************///
+///              SET TRUE IF GAME MODE IS READY TO CHECK START WAVE FLAG
+///***********************************************************************************************************////
 void AGeodroidCharacter::SetIsGameModeReady()
 {
 	bIsGameModeReady = true;
 }
 
+
+///***********************************************************************************************************///
+///               SET FALSE IF GAME MODE IS NOT READY TO CHECK START WAVE FLAG
+///***********************************************************************************************************////
 void AGeodroidCharacter::ResetIsGameModeReady()
 {
 	bIsGameModeReady = false;
 }
 
+///***********************************************************************************************************///
+///               GET THE CAMERA DETAILS
+///***********************************************************************************************************////
 void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector& OutCameraLookDirection)
 {
 	//Pointer Protection
@@ -754,4 +847,34 @@ void AGeodroidCharacter::GetCameraDetails(FVector& OutCameraLocation, FVector& O
 	//Returning the Details
 	OutCameraLocation = PlayerController->PlayerCameraManager->GetCameraLocation();
 	OutCameraLookDirection = PlayerController->PlayerCameraManager->GetCameraRotation().Vector();
+}
+
+///***********************************************************************************************************///
+///                            DEBUG FUNCTION
+///***********************************************************************************************************////
+void AGeodroidCharacter::DebugFunction()
+{
+	//Pointer Protection
+	if (!World) return;
+
+	if (UPointerProtection::CheckAndLog(NodeViewerClass, "NodeViewerClass"))
+	{
+		//Get the Map's Max Size
+		FVector2D MapMaxSize = UMapClass::GetMapMaxSize();
+		//Iterate through each Node
+		for (int32 X = 0; X < MapMaxSize.X; X++)
+		{
+			for (int32 Y = 0; Y < MapMaxSize.Y; Y++)
+			{
+				//Ask Gamemode for the position of the Node
+				FVector position = UMapClass::GetMapNodePosition(X, Y);
+				position.Z = 100.f;
+
+				//Spawn the actor at that location
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+				ANodeViewerActor* NodeViewer = World->SpawnActor<ANodeViewerActor>(NodeViewerClass, position, FRotator(0.f), SpawnParams);
+			}
+		}
+	}
 }

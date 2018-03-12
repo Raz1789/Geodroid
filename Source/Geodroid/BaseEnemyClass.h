@@ -2,20 +2,27 @@
 
 #pragma once
 
+// UNREAL HEADER FILES
 #include "CoreMinimal.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/Pawn.h"
 #include "DrawDebugHelpers.h"
 #include "Components/SphereComponent.h"
 #include "Engine/World.h"
+
+// PROJECT HEADER FILES
 #include "PointerProtection.h"
 #include "MapNode.h"
 #include "A_Pathfinding.h"
 #include "GeodroidProjectile.h"
 #include "MapClass.h"
 #include "GeodroidCharacter.h"
-#include "Kismet/GameplayStatics.h"
+
+// MANDATE FILES
 #include "BaseEnemyClass.generated.h"
 
+
+//The Enemy State Enum
 UENUM()
 enum class EnemyState : uint8
 {
