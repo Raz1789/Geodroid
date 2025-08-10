@@ -69,14 +69,14 @@ void ATurret::Tick(float DeltaTime)
 		if (bHasSweepHitAnyObject) ///check if sweep detected any objects
 		{
 			///Blueprint Implemented Function to point the Turret at Target Enemy
-			ReceiveLookAtTargetEnemy(TargetActor);
+			ReceiveLookAtTargetEnemy(Target);
 
 			///Visibility check
-			bool bIsEnemyVisible = IsEnemyInVisibleRange(TargetActor);
+			bool bIsEnemyVisible = IsEnemyInVisibleRange(Target);
 
 			if (bIsEnemyVisible)
 			{
-				ShootAtEnemy(TargetActor); ///Shoot at Enemy
+				ShootAtEnemy(Target); ///Shoot at Enemy
 			}
 		}
 
@@ -114,31 +114,31 @@ void ATurret::SearchForEnemy()
 	if (bHasSweepHitAnyObject)
 	{
 		/// variable to check if the previous Target is still inside the Influence Circle
-		bool bIsTargetActorPresentInHitResult = false; ///default value to false
+		bool bIsTargetPresentInHitResult = false; ///default value to false
 
-		if (TargetActor) /// pointer check for Target
+		if (Target) /// pointer check for Target
 		{
 			/// Iterate over all enemies inside the Influence Circle 
 			/// and search for the previously shooting enemy
 			for (FHitResult& Hit : OutHits)
 			{
-				if (Hit.GetActor() == TargetActor)
+				if (Hit.GetActor() == Target)
 				{
-					bIsTargetActorPresentInHitResult = true;
+					bIsTargetPresentInHitResult = true;
 					break;
 				}
 			}
 			/// If not found set to first Enemy inside Influence Circle
-			if (!bIsTargetActorPresentInHitResult)
+			if (!bIsTargetPresentInHitResult)
 			{
-				TargetActor = OutHits[0].GetActor();
+				Target = OutHits[0].GetActor();
 			}
 		}
 		else
 		{
 			/// Target not set hence setting to
 			/// first Enemy inside Influence Circle
-			TargetActor = OutHits[0].GetActor();
+			Target = OutHits[0].GetActor();
 		}
 	}
 
@@ -190,7 +190,7 @@ bool ATurret::IsEnemyInVisibleRange(const  AActor* _TargetActor)
 ///***********************************************************************************************************///
 ///                                               SHOOT AT ENEMY
 ///***********************************************************************************************************///
-void ATurret::ShootAtEnemy(const AActor* TargetActor)
+void ATurret::ShootAtEnemy(const AActor* TargetEnemy)
 {
 	///Pointer check
 	if (UPointerProtection::CheckAndLog(BP_Turret, "Turret"))
@@ -208,13 +208,13 @@ void ATurret::ShootAtEnemy(const AActor* TargetActor)
 				///Set Spawn Collision Handling Override
 				FActorSpawnParameters ActorSpawnParams;
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-				ActorSpawnParams.Instigator = Instigator;
+				ActorSpawnParams.Instigator = GetInstigator();
 
 				///Getting the Spawn Location
 				FVector SpawnLocation;
 
 				///Vector to Enemy = -TurretVector from origin + (EnemyVector + Origin + ShootDelay Offset)
-				SpawnLocation = -BP_Turret->GetComponentLocation() + (TargetActor->GetActorLocation() + /*OFFSET*/(TargetActor->GetActorForwardVector() * 50.f));
+				SpawnLocation = -BP_Turret->GetComponentLocation() + (TargetEnemy->GetActorLocation() + /*OFFSET*/(TargetEnemy->GetActorForwardVector() * 50.f));
 				SpawnLocation.Normalize(); ///To get the Direction Vector
 				FVector SpawnDirection = SpawnLocation;
 				SpawnLocation *= 100.f; ///Scale to get a point 100cm from the start of vector (Turret Barrel length)

@@ -48,13 +48,13 @@ protected:
 	FVector2D CurrentMapNode;
 
 	///-------------------------------------- SWEEP VARIABLES ----------------------------------------------------///
+	//Influence Circle radius value for Game Design Purposes
 	UPROPERTY(EditDefaultsOnly, Category = "Turret Design")
-		//Influence Circle radius value for Game Design Purposes
-		float InfluenceCircleRadius;
+	float InfluenceCircleRadius;
 
+	//Inner Collision Box representing the Turret Area Restriction
 	UPROPERTY(EditDefaultsOnly, Category = "Turret Design")
-		//Inner Collision Box representing the Turret Area Restriction
-		UBoxComponent* RestrictionArea;
+	UBoxComponent* RestrictionArea;
 
 	//CollisionShape for Sweeping for enemies
 	FCollisionShape InfluenceSphere;
@@ -67,22 +67,22 @@ protected:
 
 	///-------------------------------------- FIRING VARIABLE ----------------------------------------------------///
 	//Stores the Target Actor
-	AActor* TargetActor = nullptr;
+	AActor* Target = nullptr;
 
 	//Time from last shot was fired
 	float TimeFromLastFire;
 
+	//Projectile class
 	UPROPERTY(EditDefaultsOnly, Category = "Game Design")
-		//Projectile class
-		TSubclassOf<class AGeodroidProjectile> ProjectileClass;
+	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
 
+	/** Sound to play each time we fire */
 	UPROPERTY(EditDefaultsOnly, Category = "Game Design")
-		/** Sound to play each time we fire */
-		class USoundBase* FireSound;
+	class USoundBase* FireSound;
 
+	//Turret Rotator
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Design")
-		//Turret Rotator
-		UStaticMeshComponent* BP_Turret;
+	UStaticMeshComponent* BP_Turret;
 
 	///***********************************************************************************************************///
 	///                                       PROTECTED MEMBER FUNCTIONS
@@ -92,20 +92,20 @@ protected:
 	virtual void BeginPlay() override;
 
 	///-------------------------------------- CLASS FUNCTIONS ----------------------------------------------------///
+	//Rotate Turret to Look at Target Enemy
 	UFUNCTION(BlueprintImplementableEvent, Category = "CPP Function", meta = (DisplayName = "LookAtTargetEnemy"))
-		//Rotate Turret to Look at Target Enemy
-		void ReceiveLookAtTargetEnemy(const AActor* TargetEnemy);
+	void ReceiveLookAtTargetEnemy(const AActor* TargetEnemy);
+
+	//Check if the Enemy inside the InfluenceBox is visible and take necessary action
+	UFUNCTION()
+	void SearchForEnemy();
+
+	//Shoot at Enemy
+	UFUNCTION()
+	void ShootAtEnemy(const  AActor* TargetEnemy);
 
 	UFUNCTION()
-		//Check if the Enemy inside the InfluenceBox is visible and take necessary action
-		void SearchForEnemy();
-
-	UFUNCTION()
-		//Shoot at Enemy
-		void ShootAtEnemy(const  AActor* TargetEnemy);
-
-	UFUNCTION()
-		bool IsEnemyInVisibleRange(const  AActor* TargetEnemy);
+	bool IsEnemyInVisibleRange(const  AActor* TargetEnemy);
 
 public:
 

@@ -5,10 +5,8 @@
 // UNREAL HEADER FILES
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/SphereComponent.h"
 
 // PROJECT HEADER FILES
-#include "MapClass.h"
 #include "MapNode.h"
 
 // MANDATE FILES
@@ -25,21 +23,21 @@ protected:
 	///***********************************************************************************************************///
 	
 	///-------------------------------------- STRUCTURE DESIGN VARIABLES -----------------------------------------///
+	//Specifies if the Node on which the Structure exist is walkable or not
 	UPROPERTY(EditDefaultsOnly, Category = "Structure Design")
-		//Specifies if the Node on which the Structure exist is walkable or not
-		bool bIsStructureWalkable;
+	bool bIsStructureWalkable;
 
+	//Specifies the Attack Rate in Seconds
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Structure Design")
-		//Specifies the Attack Rate in Seconds
-		float AttackRate;
+	float AttackRate;
 
+	//Attack Damage per shot by the Structure
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Structure Design")
-		//Attack Damage per shot by the Structure
-		float AttackDamage;
+	float AttackDamage;
 
+	//Get the Building Cost from the Blueprint
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Structure Design")
-		//Get the Building Cost from the Blueprint
-		int32 BP_BuildCost;
+	int32 BP_BuildCost;
 
 	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
 	//The Structure's Map Node Index

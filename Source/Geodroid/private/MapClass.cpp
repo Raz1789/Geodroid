@@ -2,6 +2,9 @@
 
 #include "MapClass.h"
 
+// STANDARD HEADER FILES
+#include "algorithm"
+
 #define DEBUG false;
 
 ///***********************************************************************************************************///

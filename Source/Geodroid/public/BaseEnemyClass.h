@@ -2,25 +2,11 @@
 
 #pragma once
 
-// UNREAL HEADER FILES
 #include "CoreMinimal.h"
-#include "Kismet/GameplayStatics.h"
 #include "GameFramework/Pawn.h"
-#include "DrawDebugHelpers.h"
-#include "Components/SphereComponent.h"
-#include "Engine/World.h"
-
-// PROJECT HEADER FILES
-#include "PointerProtection.h"
 #include "MapNode.h"
-#include "A_Pathfinding.h"
-#include "GeodroidProjectile.h"
 #include "MapClass.h"
-#include "GeodroidCharacter.h"
-
-// MANDATE FILES
 #include "BaseEnemyClass.generated.h"
-
 
 //The Enemy State Enum
 UENUM()
@@ -53,23 +39,23 @@ protected:
 	UWorld* World;
 
 	//The Player Actor
-	AGeodroidCharacter* Player;
+	class AGeodroidCharacter* Player;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Design")
 	//Collision capsule
-	USphereComponent* CollisionComponent = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Game Design")
+	class USphereComponent* CollisionComponent = nullptr;
 
 	///-------------------------------------- ENEMY STAT VARIABLES ---------------------------------------------------///
 	//Current Health of the Enemy
 	float EnemyHealth;
 
+	//Max Health of the Enemy
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Max Health of the Enemy
-		float MaxEnemyHealth;
+	float MaxEnemyHealth;
 
+	//The amount of gold this enemy gives
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//The amount of gold this enemy gives
-		int32 EnemyGold;
+	int32 EnemyGold;
 
 	//Variable storing the current Node of the Pawn
 	FMapNode CurrentNode;
@@ -88,29 +74,29 @@ protected:
 
 	///-------------------------------------- PROJECTILE VARIABLES --------------------------------------------///
 
+	//Projectile class
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
-		//Projectile class
 	TSubclassOf<class AGeodroidProjectile> ProjectileClass;
 
+	//Fire Rate of Enemy
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Fire Rate of Enemy
-		float EnemyFireRate;
+	float EnemyFireRate;
 
+	//Attack Damage of the Enemy
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
-		//Attack Damage of the Enemy
-		float AttackDamage;
+	float AttackDamage;
 
 	/** Sound to play each time we fire **/
 	UPROPERTY(Editanywhere, BlueprintReadWrite, Category = "Game Design")
-		class USoundBase* FireSound;
+	class USoundBase* FireSound;
 
 	//Time Lapsed after last fire
 	float TimeFromLastFire;
 
 	///-------------------------------------- VELOCITY VARIABLES -------------------------------------------------///
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 	//Speed of the Enemy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
 	float EnemyVelocity;
 
 	//Influence the speed of Enemy
@@ -118,7 +104,7 @@ protected:
 
 	///-------------------------------- PATHFINDING VARIABLES ---------------------------------------------------///
 	//Get a Pathfinding Object for this Enemy
-	UA_Pathfinding* Pathfinder;
+	class UA_Pathfinding* Pathfinder;
 
 	//Contain the path that the pawn should follow
 	TArray<FVector2D> PathList;

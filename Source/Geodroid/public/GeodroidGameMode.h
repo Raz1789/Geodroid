@@ -2,23 +2,9 @@
 
 #pragma once
 
-// UNREAL HEADER FILES
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "UObject/ConstructorHelpers.h"
-
-// CPP HEADER FILES
-#include "algorithm"
-
-// PROJECT HEADER FILES
-#include "GeodroidHUD.h"
-#include "GeodroidCharacter.h"
-#include "GeodroidCharacter.h"
-#include "MapNode.h"
-#include "MapClass.h"
-#include "BaseEnemyClass.h"
-
-//MANDATE HEADER FILES
 #include "GeodroidGameMode.generated.h"
 
 // ENUM GAME STATE
@@ -50,49 +36,49 @@ protected:
 	///***********************************************************************************************************///
 
 	///-------------------------------------- DESIGN VARIABLES ---------------------------------------------------///
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Design|Flame")
 	//Eternal Flame Health
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Design|Flame")
 	int32 EternalFlameHealth;
 
+	//Array to Set MapNode Walkables.
+	//NOTE: negative number implies all Node indices after and at that number shall set to false
+	//Eg. (2,-1) => all Nodes from (2,1) to (2,6) shall be set to false
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
-		//Array to Set MapNode Walkables.
-		//NOTE: negative number implies all Node indices after and at that number shall set to false
-		//Eg. (2,-1) => all Nodes from (2,1) to (2,6) shall be set to false
-		TArray<FVector2D> MapDesignWalkableArray;
+	TArray<FVector2D> MapDesignWalkableArray;
 
+	//Size of a single node
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
-		//Size of a single node
-		int32 NodeWorldSize;
+	int32 NodeWorldSize;
 
+	//Size of Map in number of Nodes in X and Y axes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
-		//Size of Map in number of Nodes in X and Y axes
-		FVector2D MapMaxSize;
+	FVector2D MapMaxSize;
 
+	//Start Node or the Pawn Spawn Location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
-		//Start Node or the Pawn Spawn Location
-		FVector2D StartNode;
+	FVector2D StartNode;
 
+	//Target Node
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Level")
-		//Target Node
-		FVector2D TargetNode;
+	FVector2D TargetNode;
+
+	//Set the maximum time between spawning
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
+	float TimeBetweenSpawn;
+
+	//Start Game Delay
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
+	float TimeBeforeGameStart;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
-		//Set the maximum time between spawning
-		float TimeBetweenSpawn;
+	TArray<TSubclassOf<class ABaseEnemyClass>> EnemyClassList;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
-		//Start Game Delay
-		float TimeBeforeGameStart;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
-		TArray<TSubclassOf<ABaseEnemyClass>> EnemyClassList;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Design|Enemy")
 	//Current Wave Number
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game Design|Enemy")
 	int32 CurrentWaveNumber;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
 	//Base Wave Score used to generate the Enemies
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
 	int32 WaveScore;
 
 	///-------------------------------------- GAME RUN VARIABLES ---------------------------------------------------///
@@ -120,9 +106,9 @@ public:
 	///                                       PUBLIC MEMBER VARIABLE
 	///***********************************************************************************************************///
 
+	//Stores the State the game is now
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design|Enemy")
-		//Stores the State the game is now
-		EGameState CurrentGameState;
+	EGameState CurrentGameState;
 
 	///***********************************************************************************************************///
 	///                                       PUBLIC MEMBER FUNCTIONS
@@ -136,21 +122,21 @@ public:
 	
 	///-------------------------------------- GETTER FUNCTION --------------------------------------------------///
 
-	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	//Getter for number of Enemies in play
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	int32 GetEnemyListLength() const;
 
-	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	//Get Max number of enemies in this Wave
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	int32 GetMaxSpawnablePawns() const;
 
-	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	//Get Current Wave Number
+	UFUNCTION(BlueprintPure, Category = "CPP Functions")
 	int32 GetCurrentWaveNumber() const;
 
+	//Called when Enemy reaches the Eternal Flame
 	UFUNCTION(BlueprintCallable, Category = "CPP Functions")
-		//Called when Enemy reaches the Eternal Flame
-		void SubtractEternalFlameHealth();
+	void SubtractEternalFlameHealth();
 
 private:
 	///***********************************************************************************************************///
@@ -159,13 +145,13 @@ private:
 
 	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
 	//The player instance
-	AGeodroidCharacter* Player;
+	class AGeodroidCharacter* Player;
 
 	//The player controller
-	APlayerController* PlayerController;
+	class APlayerController* PlayerController;
 
 	//Player HUD
-	AGeodroidHUD* PlayerHUD;
+	class AGeodroidHUD* PlayerHUD;
 
 	//stores the number of pawns spawned
 	int32 PawnCounter;
@@ -174,7 +160,7 @@ private:
 	float TimeFromLastSpawn;
 
 	//The Game World Variable
-	UWorld* World;
+	class UWorld* World;
 
 	//Array containing all the pawns
 	TArray<ABaseEnemyClass*> EnemyList;

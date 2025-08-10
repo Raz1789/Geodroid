@@ -2,6 +2,20 @@
 
 #include "GeodroidGameMode.h"
 
+// UNREAL HEADER FILES
+#include "Engine/World.h"
+
+// CPP HEADER FILES
+#include "algorithm"
+
+// PROJECT HEADER FILES
+#include "BaseEnemyClass.h"
+#include "GeodroidHUD.h"
+#include "GeodroidCharacter.h"
+#include "MapNode.h"
+#include "MapClass.h"
+#include "PointerProtection.h"
+
 ///***********************************************************************************************************///
 ///                                               CONSTRUCTOR
 ///***********************************************************************************************************////
@@ -416,9 +430,9 @@ void AGeodroidGameMode::SpawnEnemy(int32 PawnClassIndex)
 ///***********************************************************************************************************////
 void AGeodroidGameMode::ClearDeadEnemy()
 {
-	for (int32 EnemyCounter = 0; EnemyCounter < EnemyList.Num(); EnemyCounter++)
+	for (int32 EnemyCounter = EnemyList.Num() - 1; EnemyCounter >= 0; --EnemyCounter)
 	{
-		if (!EnemyList[EnemyCounter] || EnemyList[EnemyCounter]->IsPendingKill())
+		if (::IsValid(EnemyList[EnemyCounter]))
 		{
 			EnemyList.RemoveAt(EnemyCounter);
 		}

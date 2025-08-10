@@ -4,13 +4,7 @@
 
 // UNREAL HEADER FILES
 #include "CoreMinimal.h"
-#include "Components/BoxComponent.h"
-
-// PROJECT HEADER FILES
 #include "DefenseStructures.h"
-#include "BaseEnemyClass.h"
-
-// MANDATE FILES
 #include "SlowTrap.generated.h"
 
 /*****************************************************************************************************************
@@ -35,19 +29,19 @@ protected:
 	UWorld* World;
 
 	///-------------------------------------- DESIGN VARIABLES ---------------------------------------------------///
+	//Overlap box
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Game Design")
-		//Overlap box
-		UBoxComponent* InfluenceBox;
+	class UBoxComponent* InfluenceBox;
 
 	///***********************************************************************************************************///
 	///                                       PROTECTED MEMBER FUNCTIONS
 	///***********************************************************************************************************///
 	///-------------------------------------- CLASS FUNCTIONS ----------------------------------------------------///
 	UFUNCTION()
-		void OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	void OnBeginOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 	UFUNCTION()
-		void OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	void OnEndOverlap(AActor* OverlappedActor, AActor* OtherActor);
 
 public:
 

@@ -2,6 +2,20 @@
 
 #include "BaseEnemyClass.h"
 
+// UNREAL HEADER FILES
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/Pawn.h"
+#include "DrawDebugHelpers.h"
+#include "Components/SphereComponent.h"
+#include "Engine/World.h"
+
+// PROJECT HEADER FILES
+#include "PointerProtection.h"
+#include "A_Pathfinding.h"
+#include "GeodroidProjectile.h"
+#include "GeodroidCharacter.h"
+
 ///***********************************************************************************************************///
 ///                                               CONSTRUCTOR
 ///***********************************************************************************************************////
@@ -16,7 +30,7 @@ ABaseEnemyClass::ABaseEnemyClass()
 	RootComponent = CollisionComponent;
 	CollisionComponent->SetRelativeScale3D(FVector(1.f, 1.f, 2.f));
 	CollisionComponent->SetSphereRadius(45.f);
-	CollisionComponent->bGenerateOverlapEvents = true;
+	CollisionComponent->SetGenerateOverlapEvents(true);
 	CollisionComponent->bEditableWhenInherited = true;
 	CollisionComponent->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
@@ -339,7 +353,7 @@ void ABaseEnemyClass::DeathSequence(float DeltaTime)
 	else
 	{
 		//THE BLINKING EFFECT
-		SetActorHiddenInGame(std::cos((180 * DeathTimer.CurrentTime) / (3.14 * 3)) > 0);
+		SetActorHiddenInGame(UKismetMathLibrary::Cos((180 * DeathTimer.CurrentTime) / (3.14 * 3)) > 0);
 	}
 }
 

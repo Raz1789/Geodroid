@@ -25,10 +25,10 @@ struct FMapNode
 	FVector2D NodeIndex;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
-		FVector Position;
+	FVector Position;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Struct Data")
-		bool bWalkable;
+	bool bWalkable;
 
 
 	///***********************************************************************************************************///

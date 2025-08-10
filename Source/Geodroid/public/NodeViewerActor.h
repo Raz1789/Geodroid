@@ -5,7 +5,6 @@
 // UNREAL HEADER FILES
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/SphereComponent.h"
 
 // MANDATE FILES
 #include "NodeViewerActor.generated.h"
@@ -27,7 +26,7 @@ protected:
 
 	///-------------------------------------- MESH VARIABLE ------------------------------------------------------///
 	UPROPERTY(EditAnywhere, Category = "Visualization Mesh")
-		USphereComponent* SphereMesh;
+	class USphereComponent* SphereMesh;
 
 public:	
 	///***********************************************************************************************************///
@@ -35,6 +34,5 @@ public:
 	///***********************************************************************************************************///
 
 	///-------------------------------------- CONSTRUCTOR --------------------------------------------------------///S	
-	ANodeViewerActor();
-	
+	ANodeViewerActor();	
 };

@@ -2,6 +2,12 @@
 
 #include "SlowTrap.h"
 
+// UNREAL HEADER FILES
+#include "Components/BoxComponent.h"
+
+// PROJECT HEADER FILES
+#include "BaseEnemyClass.h"
+
 
 ///***********************************************************************************************************///
 ///                                               CONSTRUCTOR
@@ -18,7 +24,7 @@ ASlowTrap::ASlowTrap() : Super()
 	RootComponent = InfluenceBox;
 	float BoxExtends = UMapClass::GetWorldNodeSize() / 2 + /*OFFSET*/ 30.0f; //Setting to the size of a node + Offset
 	InfluenceBox->SetBoxExtent(FVector(BoxExtends)); 
-	InfluenceBox->bGenerateOverlapEvents = true;
+	InfluenceBox->SetGenerateOverlapEvents(true);
 	InfluenceBox->bMultiBodyOverlap = true;
 	InfluenceBox->BodyInstance.SetCollisionProfileName("OverlapAllDynamic");
 

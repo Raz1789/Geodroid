@@ -2,34 +2,11 @@
 
 #pragma once
 
-// UNREAL HEADER FILES
+
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Animation/AnimInstance.h"
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
-#include "Components/InputComponent.h"
-#include "GameFramework/InputSettings.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
-#include "DrawDebugHelpers.h"
-#include "Kismet/GameplayStatics.h"
-#include "MotionControllerComponent.h"
-
-//CPP HEADER FILES
-#include <algorithm>
-
-// PROJECT HEADER FILES
-#include "GeodroidProjectile.h"
 #include "MapNode.h"
-#include "MapClass.h"
-#include "Engine/World.h"
 #include "NodeViewerActor.h"
-#include "A_Pathfinding.h"
-#include "GeodroidHUD.h"
-#include "PointerProtection.h"
-#include "DefenseStructures.h"
-
-// MANDATE FILES
 #include "GeodroidCharacter.generated.h"
 
 //SELECT THE DEFENSE STRUCTURE FOR SPAWNING
@@ -77,14 +54,6 @@ class AGeodroidCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FirstPersonCameraComponent;
 
-	/** Motion controller (right hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UMotionControllerComponent* R_MotionController;
-
-	/** Motion controller (left hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UMotionControllerComponent* L_MotionController;
-
 public:
 	//Constructor
 	AGeodroidCharacter();
@@ -113,18 +82,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	class UAnimMontage* FireAnimation;
 
-	/** Whether to use motion controller location for aiming. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	uint32 bUsingMotionControllers : 1;
-
 protected:
 
 	virtual void BeginPlay();
 	/** Fires a projectile. */
 	void OnFire();
-
-	/** Resets HMD orientation and position in VR. */
-	void OnResetVR();
 
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
@@ -143,32 +105,11 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
-
-	struct TouchData
-	{
-		TouchData() { bIsPressed = false;Location=FVector::ZeroVector;}
-		bool bIsPressed;
-		ETouchIndex::Type FingerIndex;
-		FVector Location;
-		bool bMoved;
-	};
-	void BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
-	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
-	TouchData	TouchItem;
 	
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	// End of APawn interface
-
-	/* 
-	 * Configures input for touchscreen devices if there is a valid touch interface for doing so 
-	 *
-	 * @param	InputComponent	The input component pointer to bind controls to
-	 * @returns true if touch controls were enabled.
-	 */
-	bool EnableTouchscreenMovement(UInputComponent* InputComponent);
 
 #pragma endregion
 
@@ -180,13 +121,13 @@ protected:
 	///-------------------------------------- COMMON VARIABLES ---------------------------------------------------///
 
 	//World pointer
-	UWorld* World;
+	class UWorld* World;
 
 	//The PlayerController
-	APlayerController* PlayerController;
+	class APlayerController* PlayerController;
 
 	//The Player HUD
-	AGeodroidHUD* PlayerHUD;
+	class AGeodroidHUD* PlayerHUD;
 	
 	///-------------------------------------- PLAYER STATUS VARIABLES ---------------------------------------------///
 	//Health of the player
@@ -270,7 +211,7 @@ protected:
 	void DestroyInit();
 
 	//Checks if the Actor provided is visible
-	bool VisibilityCheck(const  AActor* TargetActor);
+	bool VisibilityCheck(const  AActor* Target);
 
 	//Checks if the Actor provided is visible
 	AActor* LineTraceForward();

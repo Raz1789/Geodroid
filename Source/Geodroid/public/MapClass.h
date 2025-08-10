@@ -2,13 +2,9 @@
 
 #pragma once
 
-
 // UNREAL HEADER FILES
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-
-// STANDARD HEADER FILES
-#include "algorithm"
 
 // PROJECT HEADER FILES
 #include "MapNode.h"
@@ -33,58 +29,58 @@ public:
 	///***********************************************************************************************************///
 
 	///----------------------------------- HELPER FUNCTIONS ------------------------------------------------------///
+	//Used to initalize this static class variables
 	UFUNCTION(BlueprintCallable, Category = "Helper Functions")
-		//Used to initalize this static class variables
-		static void Init(TArray<FVector2D> _MapDesignWalkableArray, 
-						 float _WorldNodeSize,
-						 FVector2D _TargetNode, 
-						 FVector2D _MapMaxSize);
+	static void Init(TArray<FVector2D> _MapDesignWalkableArray, 
+					 float _WorldNodeSize,
+					 FVector2D _TargetNode, 
+					 FVector2D _MapMaxSize);
 
 	//Helper function to convert 2D index to 1D index
 	UFUNCTION(BlueprintCallable, Category = "Helper Functions")
-		static int32 IndexFrom2DTo1D(int32 X, int32 Y, FVector2D ArraySize);
+	static int32 IndexFrom2DTo1D(int32 X, int32 Y, FVector2D ArraySize);
 
 	///-------------------------------------- GETTER FUNCTIONS ---------------------------------------------------///
 
 	//Returns the Node position in World Space
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static FVector GetMapNodePosition(int32 X, int32 Y);
+	static FVector GetMapNodePosition(int32 X, int32 Y);
 
 	//Convert world position to Map Node
 	UFUNCTION(BlueprintCallable, Category = "Helper Functions")
-		static FMapNode WorldToMapNode(FVector WorldPosition);
+	static FMapNode WorldToMapNode(FVector WorldPosition);
 
 	//Check if a MapNode is Walkable
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static bool IsMapNodeWalkable(int32 X, int32 Y);
+	static bool IsMapNodeWalkable(int32 X, int32 Y);
 
 	//Check if a structure is build on the node
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static bool IsStructureOnNode(int32 X, int32 Y);
+	static bool IsStructureOnNode(int32 X, int32 Y);
 
 	//Check if MapNode status has changed
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static bool IsMapNodeStatusChanged();
+	static bool IsMapNodeStatusChanged();
 
 	// retrn the current MapWalkable array
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static TArray<bool> GetMapWalkableArray();
+	static TArray<bool> GetMapWalkableArray();
 
 	// returns the Size of the Map in node numbers e.g. 5 Nodes x 5 Nodes
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static FVector2D GetMapMaxSize();
+	static FVector2D GetMapMaxSize();
 
 	// returns the Target node in the map where the enemy should reach
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static FMapNode GetTargetNode();
+	static FMapNode GetTargetNode();
 	
 	//Get the size of a Node in world Space
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static float GetWorldNodeSize();
+	static float GetWorldNodeSize();
 
 	//Resets teh Map node change Status after all the enemy's paths are updated
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
-		static void ResetMapNodeChangeStatus();
+	static void ResetMapNodeChangeStatus();
 
 	//Check whether the debug is on for the project
 	UFUNCTION(BlueprintCallable, Category = "Getter Functions")
@@ -94,11 +90,11 @@ public:
 
 	//Sets whether a Structure was built on this Node
 	UFUNCTION(BlueprintCallable, Category = "Setter Functions")
-		static void SetStructureOnNode(int32 X, int32 Y, bool _bStructurePresent);
+	static void SetStructureOnNode(int32 X, int32 Y, bool _bStructurePresent);
 
 	//Sets whether the Node is currently walkable or not
 	UFUNCTION(BlueprintCallable, Category = "Setter Functions")
-		static void SetMapNodeWalkable(int32 X, int32 Y, bool _bWalkable);
+	static void SetMapNodeWalkable(int32 X, int32 Y, bool _bWalkable);
 
 private:
 	///***********************************************************************************************************///
@@ -142,20 +138,19 @@ private:
 	UMapClass();
 
 	///-------------------------------- CLASS FUNCTIONS ----------------------------------------------------------///
+	//Function to create the MAP grids for the world
 	UFUNCTION()
-		//Function to create the MAP grids for the world
-		static void CreateMapGrid();
+	static void CreateMapGrid();
 
+	//Function to set the bWalkable of the node from Game Designer provided TArray
 	UFUNCTION()
-		//Function to set the bWalkable of the node from Game Designer provided TArray
-		static void SetMapWalkables();
+	static void SetMapWalkables();
 
+	//Function to extract the bWalkable from the Map
 	UFUNCTION()
-		//Function to extract the bWalkable from the Map
-		static void MapWalkableExtractor();
+	static void MapWalkableExtractor();
 
+	//Display the Map in Output log for Debug
 	UFUNCTION()
-		//Display the Map in Output log for Debug
-		static void DisplayMapForDebug();
-	
+	static void DisplayMapForDebug();	
 };
