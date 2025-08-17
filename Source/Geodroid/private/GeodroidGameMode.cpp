@@ -432,7 +432,7 @@ void AGeodroidGameMode::ClearDeadEnemy()
 {
 	for (int32 EnemyCounter = EnemyList.Num() - 1; EnemyCounter >= 0; --EnemyCounter)
 	{
-		if (::IsValid(EnemyList[EnemyCounter]))
+		if (!::IsValid(EnemyList[EnemyCounter]))
 		{
 			EnemyList.RemoveAt(EnemyCounter);
 		}

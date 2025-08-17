@@ -208,7 +208,6 @@ void ABaseEnemyClass::MovePawnAlongPathList(float DeltaTime)
 	}
 	else //end of pathlist is always the end node
 	{
-
 		CurrentState = EnemyState::Dead;
 
 		//SET END REACHED FLAG FOR GAME MODE FLAME HEALTH DEDUCTION
@@ -271,7 +270,7 @@ void ABaseEnemyClass::MoveToTargetVector(const FVector & TargetVector)
 	SetActorRotation(FMath::Lerp(GetActorRotation(), LookRotator, 0.15f));
 
 	///move towards target
-	AddMovementInput(GetActorForwardVector(), (EnemyVelocity / 1200.f) * SpeedImpact);
+	AddMovementInput(GetActorForwardVector(), SpeedImpact);
 }
 
 ///***********************************************************************************************************///
